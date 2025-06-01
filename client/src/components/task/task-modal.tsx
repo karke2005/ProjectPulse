@@ -16,16 +16,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { format } from "date-fns";
 import { z } from "zod";
 
-const taskFormSchema = insertTaskSchema.extend({
+const taskFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  projectId: z.number().min(1, "Project is required"),
+  date: z.string(),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
-}).refine((data) => {
-  const start = new Date(`2000-01-01T${data.startTime}`);
-  const end = new Date(`2000-01-01T${data.endTime}`);
-  return end > start;
-}, {
-  message: "End time must be after start time",
-  path: ["endTime"],
 });
 
 type TaskFormData = z.infer<typeof taskFormSchema>;
