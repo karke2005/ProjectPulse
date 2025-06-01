@@ -50,7 +50,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login">
-        {isAuthenticated ? <Dashboard /> : <Login />}
+        {isAuthenticated ? <AuthenticatedApp /> : <Login />}
       </Route>
       <Route path="*">
         {isAuthenticated ? <AuthenticatedApp /> : <Login />}
