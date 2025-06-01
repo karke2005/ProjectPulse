@@ -88,8 +88,8 @@ export default function Admin() {
       {/* Simple Status Message */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="text-sm text-gray-900">
-          <span className="font-medium">Daily Status ({format(selectedDate, 'MMM dd, yyyy')}):</span> 
-          <span className="ml-2">Task Plans: {submittedCount} of {totalUsers} submitted</span>
+          <span className="font-medium">Today's Task Plans:</span> 
+          <span className="ml-2">{submittedCount} of {totalUsers} submitted</span>
           {missingCount > 0 && (
             <span className="ml-2 text-red-600">
               • Missing: {employeeSubmissions.filter(us => !us.submission).map(us => us.user.username).join(', ')}
@@ -97,8 +97,8 @@ export default function Admin() {
           )}
         </div>
         <div className="text-sm text-gray-900 mt-2">
-          <span className="font-medium">Timesheet Status ({format(yesterday, 'MMM dd, yyyy')}):</span>
-          <span className="ml-2">Timesheets: {timesheetSubmittedCount} of {totalUsers} submitted</span>
+          <span className="font-medium">Yesterday's Timesheets:</span>
+          <span className="ml-2">{timesheetSubmittedCount} of {totalUsers} submitted</span>
           {timesheetMissingCount > 0 && (
             <span className="ml-2 text-red-600">
               • Missing: {employeeSubmissions.filter(us => !usersWithTimesheets.has(us.user.id)).map(us => us.user.username).join(', ')}
@@ -139,17 +139,40 @@ export default function Admin() {
                       </div>
                     </div>
                     
-                    {isSubmitted && (
-                      <div className="text-xs text-green-700">
-                        {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
-                        {userSubmission.isLate && " (Late)"}
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      {isSubmitted && userSubmission.submission && (
+                        <div className="text-xs text-green-700">
+                          {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                          {userSubmission.isLate && " (Late)"}
+                        </div>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() => handleViewUserTasks(userSubmission.user.id)}
+                      >
+                        {selectedUserId === userSubmission.user.id ? 'Hide Details' : 'View Details'}
+                      </Button>
+                    </div>
                   </div>
                   
-                  {userSubmission.taskCount > 0 && (
-                    <div className="ml-11 text-xs text-gray-600">
-                      Task details: {userSubmission.taskCount} tasks scheduled for today
+                  {selectedUserId === userSubmission.user.id && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="text-xs text-gray-600">
+                        <div className="mb-1">
+                          <span className="font-medium">Task Plan:</span> {userSubmission.taskCount} tasks scheduled for today
+                        </div>
+                        <div>
+                          <span className="font-medium">Timesheet:</span> {hasTimesheet ? 'Submitted for yesterday' : 'No timesheet submitted for yesterday'}
+                        </div>
+                        {isSubmitted && userSubmission.submission && (
+                          <div className="mt-1">
+                            <span className="font-medium">Submitted at:</span> {format(new Date(userSubmission.submission.submittedAt), 'MMM dd, h:mm a')}
+                            {userSubmission.isLate && <span className="text-orange-600"> (Late submission)</span>}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
