@@ -96,10 +96,15 @@ export default function TimeBasedCalendar({
     
     const hourHeight = 60; // 60px per hour
     const hour = Math.floor(y / hourHeight) + 6; // Starting at 6 AM
-    const minute = Math.round((y % hourHeight) / hourHeight * 60 / 15) * 15; // 15-minute intervals
+    const minuteProgress = (y % hourHeight) / hourHeight; // 0 to 1 progress within the hour
+    const minute = Math.floor(minuteProgress * 60); // Convert to exact minute
     
     const date = weekDays[dayIndex];
-    return { date, hour: Math.min(Math.max(hour, 6), 21), minute: Math.min(minute, 45) };
+    return { 
+      date, 
+      hour: Math.min(Math.max(hour, 6), 21), 
+      minute: Math.min(Math.max(minute, 0), 59) 
+    };
   };
 
   const handleMouseDown = (event: React.MouseEvent) => {

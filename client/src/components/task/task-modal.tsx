@@ -46,7 +46,9 @@ export default function TaskModal({
   onSuccess, 
   task, 
   projects, 
-  defaultDate = new Date() 
+  defaultDate = new Date(),
+  defaultStartTime,
+  defaultEndTime
 }: TaskModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -85,18 +87,21 @@ export default function TaskModal({
         });
       } else {
         // Creating new task
+        const startTimeStr = defaultStartTime ? format(defaultStartTime, "HH:mm") : "09:00";
+        const endTimeStr = defaultEndTime ? format(defaultEndTime, "HH:mm") : "10:00";
+        
         form.reset({
           title: "",
           description: "",
           projectId: 0,
           userId: 0,
-          startTime: "09:00",
-          endTime: "10:00",
+          startTime: startTimeStr,
+          endTime: endTimeStr,
           date: defaultDate.toISOString(),
         });
       }
     }
-  }, [isOpen, task, defaultDate, form]);
+  }, [isOpen, task, defaultDate, defaultStartTime, defaultEndTime, form]);
 
   const createTaskMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/tasks', data),
