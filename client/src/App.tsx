@@ -22,7 +22,8 @@ function AuthenticatedApp() {
         <Header />
         <main className="flex-1 overflow-y-auto">
           <Switch>
-            <Route path="/" component={Dashboard} />
+            <Route path="/" component={TaskPlanning} />
+            <Route path="/dashboard" component={Dashboard} />
             <Route path="/task-planning" component={TaskPlanning} />
             <Route path="/timesheet" component={Timesheet} />
             <Route path="/admin" component={Admin} />
