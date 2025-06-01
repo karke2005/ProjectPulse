@@ -199,102 +199,41 @@ export default function Admin() {
 
       <Tabs defaultValue="submissions" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="submissions">Task Plan Monitoring</TabsTrigger>
-          <TabsTrigger value="user-details" disabled={!selectedUserId}>
-            User Task Details
-          </TabsTrigger>
+          <TabsTrigger value="submissions">Daily Status</TabsTrigger>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
         </TabsList>
 
         <TabsContent value="submissions">
           <Card>
             <CardHeader>
-              <CardTitle>Task Plan Submission Status - {format(selectedDate, 'MMMM dd, yyyy')}</CardTitle>
+              <CardTitle>Task Plan Status - {format(selectedDate, 'MMMM dd, yyyy')}</CardTitle>
             </CardHeader>
             
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Plan Submitted
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Submission Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tasks Count
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {userSubmissions.map((userSubmission) => (
-                      <tr key={userSubmission.user.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                              <span className="text-xs font-medium text-white">
-                                {userSubmission.user.username.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="ml-3">
-                              <div className="text-sm font-medium text-gray-900">
-                                {userSubmission.user.username}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {userSubmission.user.email}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge 
-                            variant={userSubmission.submission ? "default" : "destructive"}
-                            className={userSubmission.submission 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                            }
-                          >
-                            <i className={`fas ${userSubmission.submission ? 'fa-check' : 'fa-times'} mr-1`}></i>
-                            {userSubmission.submission ? 'Yes' : 'No'}
+              <div className="space-y-3">
+                {userSubmissions.map((userSubmission) => (
+                  <div key={userSubmission.user.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-sm font-medium text-white">
+                          {userSubmission.user.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{userSubmission.user.username}</div>
+                        <div className="text-sm text-gray-500">{userSubmission.taskCount} tasks</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      {userSubmission.submission ? (
+                        <>
+                          <Badge className="bg-green-100 text-green-800">
+                            Submitted {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
                           </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {userSubmission.submission 
-                            ? format(new Date(userSubmission.submission.submittedAt), 'h:mm a')
-                            : '-'
-                          }
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {userSubmission.taskCount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {userSubmission.submission ? (
-                            <Badge 
-                              variant={userSubmission.isLate ? "secondary" : "default"}
-                              className={userSubmission.isLate 
-                                ? "bg-orange-100 text-orange-800" 
-                                : "bg-green-100 text-green-800"
-                              }
-                            >
-                              {userSubmission.isLate ? 'Late' : 'On Time'}
-                            </Badge>
-                          ) : (
-                            <Badge variant="destructive" className="bg-red-100 text-red-800">
-                              Missing
-                            </Badge>
+                          {userSubmission.isLate && (
+                            <Badge className="bg-orange-100 text-orange-800">Late</Badge>
                           )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <Button
                             size="sm"
                             variant="outline"
@@ -303,68 +242,206 @@ export default function Admin() {
                           >
                             View Tasks
                           </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </>
+                      ) : (
+                        <Badge variant="destructive" className="bg-red-100 text-red-800">
+                          Missing Plan
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              {selectedUserId && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h4 className="font-medium text-gray-900 mb-4">
+                    Tasks for {userSubmissions.find(us => us.user.id === selectedUserId)?.user.username}
+                  </h4>
+                  {userTasks.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No tasks found for this date.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {userTasks.map((task) => (
+                        <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <div className="font-medium text-gray-900">{task.title}</div>
+                            <div className="text-sm text-gray-500">
+                              {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
+                            </div>
+                          </div>
+                          <Badge style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}>
+                            {task.project.name}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="user-details">
-          {selectedUserId && (
+        <TabsContent value="projects">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Project Management</h3>
+              <Button onClick={() => setShowProjectForm(!showProjectForm)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Project
+              </Button>
+            </div>
+
+            {showProjectForm && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create New Project</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Project Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter project name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="color"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Color</FormLabel>
+                              <FormControl>
+                                <Input type="color" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="endDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="invoiceAmount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Invoice Amount ($)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.01" 
+                                  placeholder="0.00" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Enter project description" 
+                                className="resize-none"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex space-x-3">
+                        <Button type="submit" disabled={createProjectMutation.isPending}>
+                          {createProjectMutation.isPending ? "Creating..." : "Create Project"}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={() => setShowProjectForm(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
-                <CardTitle>
-                  User Task Details - {userSubmissions.find(us => us.user.id === selectedUserId)?.user.username}
-                </CardTitle>
+                <CardTitle>Existing Projects</CardTitle>
               </CardHeader>
-              
               <CardContent>
-                {userTasks.length === 0 ? (
-                  <div className="text-center py-8">
-                    <i className="fas fa-calendar-times text-gray-300 text-4xl mb-4"></i>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Tasks Found</h3>
-                    <p className="text-gray-600">This user has no tasks for the selected date.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {userTasks.map((task) => (
-                      <div key={task.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
-                            <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-                            <div className="mt-2 flex items-center space-x-4">
-                              <Badge 
-                                style={{ 
-                                  backgroundColor: `${task.project.color}20`,
-                                  color: task.project.color 
-                                }}
-                              >
-                                {task.project.name}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">
-                              {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
-                            </div>
-                            <div className="text-xs text-gray-500">planned</div>
-                          </div>
+                <div className="space-y-3">
+                  {projects.map((project) => (
+                    <div key={project.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div 
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: project.color }}
+                        />
+                        <div>
+                          <div className="font-medium text-gray-900">{project.name}</div>
+                          <div className="text-sm text-gray-500">{project.description}</div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-gray-900">
+                          ${((project.invoiceAmount || 0) / 100).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {format(new Date(project.startDate), 'MMM dd')} - {format(new Date(project.endDate), 'MMM dd')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
