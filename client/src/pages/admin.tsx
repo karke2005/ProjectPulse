@@ -41,11 +41,12 @@ export default function Admin() {
     enabled: !!selectedUserId,
   });
 
-  // Calculate stats
-  const totalUsers = userSubmissions.length;
-  const submittedCount = userSubmissions.filter(us => us.submission).length;
-  const lateCount = userSubmissions.filter(us => us.isLate && us.submission).length;
-  const missingCount = userSubmissions.filter(us => !us.submission).length;
+  // Calculate stats (excluding admin)
+  const employeeSubmissions = userSubmissions.filter(us => us.user.id !== 1);
+  const totalUsers = employeeSubmissions.length;
+  const submittedCount = employeeSubmissions.filter(us => us.submission).length;
+  const lateCount = employeeSubmissions.filter(us => us.isLate && us.submission).length;
+  const missingCount = employeeSubmissions.filter(us => !us.submission).length;
 
   const handleViewUserTasks = (userId: number) => {
     setSelectedUserId(selectedUserId === userId ? null : userId);
@@ -71,45 +72,18 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Status Summary Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg font-medium text-gray-900">
-            Daily Status - {format(selectedDate, 'MMM dd, yyyy')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Task Plan Submissions</div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">{submittedCount} of {totalUsers}</div>
-              <div className="text-sm text-gray-600">employees submitted</div>
-              {missingCount > 0 && (
-                <div className="mt-2">
-                  <div className="text-xs text-gray-500 mb-1">Missing:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {userSubmissions.filter(us => !us.submission).map(us => (
-                      <Badge key={us.user.id} variant="outline" className="text-xs">
-                        {us.user.username}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Timesheet Status</div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">
-                {userSubmissions.filter(us => us.user.id !== 1).length}
-              </div>
-              <div className="text-sm text-gray-600">employees tracked</div>
-              <div className="mt-2 text-xs text-gray-500">
-                View individual timesheets below
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Simple Status Message */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="text-sm text-gray-900">
+          <span className="font-medium">Daily Status ({format(selectedDate, 'MMM dd, yyyy')}):</span> 
+          <span className="ml-2">Task Plans: {submittedCount} of {totalUsers} submitted</span>
+          {missingCount > 0 && (
+            <span className="ml-2 text-red-600">
+              • Missing: {employeeSubmissions.filter(us => !us.submission).map(us => us.user.username).join(', ')}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Employee Details */}
       <Card>
@@ -118,7 +92,7 @@ export default function Admin() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {userSubmissions.map((userSubmission) => (
+            {userSubmissions.filter(us => us.user.id !== 1).map((userSubmission) => (
               <div key={userSubmission.user.id} className="border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between p-3 hover:bg-gray-50">
                   <div className="flex items-center space-x-3">
@@ -146,11 +120,8 @@ export default function Admin() {
                         Not Submitted
                       </Badge>
                     )}
-
                   </div>
                 </div>
-
-
               </div>
             ))}
           </div>
