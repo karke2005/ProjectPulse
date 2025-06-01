@@ -104,11 +104,12 @@ export default function TaskModal({
           defaultEndTime: defaultEndTime?.toLocaleTimeString()
         });
         
+        const user = getCurrentUser();
         form.reset({
           title: "",
           description: "",
-          projectId: 0,
-          userId: 0,
+          projectId: projects[0]?.id || 1,
+          userId: user?.id || 1,
           startTime: startTimeStr,
           endTime: endTimeStr,
           date: defaultDate.toISOString(),
