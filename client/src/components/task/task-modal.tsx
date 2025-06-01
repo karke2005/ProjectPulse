@@ -158,6 +158,16 @@ export default function TaskModal({
   });
 
   const onSubmit = (data: TaskFormData) => {
+    // Validate required fields
+    if (!data.title || !data.projectId) {
+      toast({
+        title: "Validation Error",
+        description: "Title and project are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Convert time strings to full datetime
     const baseDate = new Date(data.date);
     const startDateTime = new Date(baseDate);
@@ -171,12 +181,14 @@ export default function TaskModal({
 
     const taskData = {
       title: data.title,
-      description: data.description,
-      projectId: data.projectId,
+      description: data.description || null,
+      projectId: Number(data.projectId),
       startTime: startDateTime.toISOString(),
       endTime: endDateTime.toISOString(),
       date: baseDate.toISOString(),
     };
+
+    console.log('Submitting task data:', taskData);
 
     if (isEditing && task) {
       updateTaskMutation.mutate({ id: task.id, data: taskData });
