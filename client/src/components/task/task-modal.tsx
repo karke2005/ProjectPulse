@@ -164,9 +164,9 @@ export default function TaskModal({
       return;
     }
 
-    // Always use today's date for new tasks
+    // Always use today's date for new tasks - ensure it's today in UTC
     const today = new Date();
-    const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const taskDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
     
     const startDateTime = new Date(taskDate);
     const endDateTime = new Date(taskDate);
