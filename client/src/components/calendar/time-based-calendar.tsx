@@ -221,7 +221,7 @@ export default function TimeBasedCalendar({
               <div key={`${hour}-${minute}`} className="grid grid-cols-8 border-b last:border-b-0">
                 {/* Time label */}
                 <div className="p-2 text-xs text-gray-600 border-r bg-gray-50 flex items-center">
-                  {minute === 0 && format(setHours(new Date(), hour), 'h:mm a')}
+                  {minute === 0 && `${hour <= 12 ? hour === 12 ? '12' : hour : hour - 12}:00 ${hour < 12 ? 'AM' : 'PM'}`}
                 </div>
                 
                 {/* Day cells */}
@@ -238,7 +238,7 @@ export default function TimeBasedCalendar({
                         isPast 
                           ? 'bg-gray-100 cursor-not-allowed' 
                           : isSelected
-                          ? 'bg-blue-200 cursor-crosshair'
+                          ? 'bg-blue-300 border-2 border-blue-500 cursor-crosshair'
                           : 'hover:bg-gray-50 cursor-crosshair'
                       }`}
                       data-date={day.toISOString()}
