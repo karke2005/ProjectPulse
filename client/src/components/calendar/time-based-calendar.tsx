@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,9 +80,32 @@ export default function TimeBasedCalendar({
     return { date, hour: Math.min(Math.max(hour, 6), 21), minute: Math.min(minute, 45) };
   };
 
+  const getTimeSlotFromContainer = (event: React.MouseEvent) => {
+    const calendarContainer = calendarRef.current;
+    if (!calendarContainer) return null;
+
+    const rect = calendarContainer.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    // Calculate which day column (skip first column which is time labels)
+    const columnWidth = rect.width / 8; // 8 columns total (1 time + 7 days)
+    const dayIndex = Math.floor(x / columnWidth) - 1; // -1 to skip time column
+    
+    if (dayIndex < 0 || dayIndex >= 7) return null;
+    
+    const hourHeight = 60; // 60px per hour
+    const hour = Math.floor(y / hourHeight) + 6; // Starting at 6 AM
+    const minute = Math.round((y % hourHeight) / hourHeight * 60 / 15) * 15; // 15-minute intervals
+    
+    const date = weekDays[dayIndex];
+    return { date, hour: Math.min(Math.max(hour, 6), 21), minute: Math.min(minute, 45) };
+  };
+
   const handleMouseDown = (event: React.MouseEvent, dayIndex: number) => {
     if (isPastDate(weekDays[dayIndex])) return;
     
+    event.preventDefault();
     const position = getTimeSlotPosition(event, dayIndex);
     setIsDragging(true);
     setDragStart(position);
@@ -96,7 +119,7 @@ export default function TimeBasedCalendar({
     setDragEnd(position);
   }, [isDragging, dragStart]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     if (!isDragging || !dragStart || !dragEnd) return;
     
     setIsDragging(false);
@@ -119,7 +142,17 @@ export default function TimeBasedCalendar({
     
     setDragStart(null);
     setDragEnd(null);
-  };
+  }, [isDragging, dragStart, dragEnd, onTaskCreate]);
+
+  // Add global mouse up listener
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseUp]);
 
   const isInDragSelection = (dayIndex: number, hour: number) => {
     if (!isDragging || !dragStart || !dragEnd) return false;
@@ -230,12 +263,6 @@ export default function TimeBasedCalendar({
           <div 
             ref={calendarRef}
             className="relative"
-            onMouseUp={handleMouseUp}
-            onMouseLeave={() => {
-              setIsDragging(false);
-              setDragStart(null);
-              setDragEnd(null);
-            }}
           >
             {hours.map((hour) => (
               <div key={hour} className="grid grid-cols-8 border-b border-gray-100">
