@@ -165,9 +165,7 @@ export default function TaskModal({
       return;
     }
 
-    // Convert time strings to full datetime
-    const baseDate = new Date(data.date);
-    // Ensure we're using today's date in local timezone
+    // Always use today's date for new tasks
     const today = new Date();
     const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     
