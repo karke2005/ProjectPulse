@@ -148,7 +148,12 @@ export default function TaskPlanning() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Status Banner */}
       <StatusBanner 
-        taskPlanStatus={submissionStatus || { submitted: false }}
+        taskPlanStatus={{
+          submitted: submissionStatus?.submitted || false,
+          submission: submissionStatus?.submission ? {
+            submittedAt: submissionStatus.submission.submittedAt.toString()
+          } : null
+        }}
       />
       
       {/* Page Header */}
@@ -206,9 +211,9 @@ export default function TaskPlanning() {
           tasks={tasks}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onTaskCreate={(date) => {
+          onTaskEdit={submissionStatus?.submitted ? () => {} : handleEditTask}
+          onTaskDelete={submissionStatus?.submitted ? () => {} : handleDeleteTask}
+          onTaskCreate={submissionStatus?.submitted ? () => {} : (date) => {
             setSelectedDate(date);
             setEditingTask(null);
             setDragTaskData(null);
@@ -220,9 +225,9 @@ export default function TaskPlanning() {
           tasks={tasks}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onTaskCreate={handleDragTaskCreate}
+          onTaskEdit={submissionStatus?.submitted ? () => {} : handleEditTask}
+          onTaskDelete={submissionStatus?.submitted ? () => {} : handleDeleteTask}
+          onTaskCreate={submissionStatus?.submitted ? () => {} : handleDragTaskCreate}
         />
       )}
 
