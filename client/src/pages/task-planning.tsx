@@ -172,6 +172,7 @@ export default function TaskPlanning() {
             <Button
               onClick={() => {
                 setEditingTask(null);
+                setDragTaskData(null);
                 setIsTaskModalOpen(true);
               }}
               className="bg-primary text-white hover:bg-primary/90 text-xs px-3 py-1 h-6"
@@ -190,64 +191,7 @@ export default function TaskPlanning() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-primary-50 rounded-lg">
-                <i className="fas fa-calendar-check text-primary"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Tasks</p>
-                <p className="text-2xl font-bold text-gray-900">{todayTasks.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <i className="fas fa-calendar-week text-blue-600"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Week</p>
-                <p className="text-2xl font-bold text-gray-900">{weekTasks}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <i className="fas fa-project-diagram text-green-600"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Projects</p>
-                <p className="text-2xl font-bold text-gray-900">{totalProjects}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <i className="fas fa-clock text-purple-600"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Planned Hours</p>
-                <p className="text-2xl font-bold text-gray-900">{totalHours.toFixed(1)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {/* Calendar Views */}
       {calendarView === 'overview' ? (
