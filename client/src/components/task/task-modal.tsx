@@ -108,10 +108,9 @@ export default function TaskModal({
           title: "",
           description: "",
           projectId: projects[0]?.id || 1,
-          userId: user?.id || 1,
           startTime: startTimeStr,
           endTime: endTimeStr,
-          date: defaultDate.toISOString(),
+          date: new Date().toISOString(),
         });
       }
     }
@@ -187,7 +186,7 @@ export default function TaskModal({
       date: taskDate.toISOString(),
     };
 
-    console.log('Submitting task data:', taskData);
+
 
     if (isEditing && task) {
       updateTaskMutation.mutate({ id: task.id, data: taskData });
