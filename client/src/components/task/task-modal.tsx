@@ -36,6 +36,8 @@ interface TaskModalProps {
   task?: TaskWithProject | null;
   projects: Project[];
   defaultDate?: Date;
+  defaultStartTime?: Date;
+  defaultEndTime?: Date;
 }
 
 export default function TaskModal({ 

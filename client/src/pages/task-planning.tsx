@@ -14,6 +14,8 @@ export default function TaskPlanning() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskWithProject | null>(null);
+  const [calendarView, setCalendarView] = useState<'overview' | 'timeline'>('timeline');
+  const [dragTaskData, setDragTaskData] = useState<{ date: Date; startTime: Date; endTime: Date } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -72,7 +74,14 @@ export default function TaskPlanning() {
   const handleTaskCreated = () => {
     setIsTaskModalOpen(false);
     setEditingTask(null);
+    setDragTaskData(null);
     queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+  };
+
+  const handleDragTaskCreate = (date: Date, startTime: Date, endTime: Date) => {
+    setDragTaskData({ date, startTime, endTime });
+    setEditingTask(null);
+    setIsTaskModalOpen(true);
   };
 
   const handleEditTask = (task: TaskWithProject) => {
@@ -144,6 +153,22 @@ export default function TaskPlanning() {
             <p className="text-gray-600 mt-1">Plan and organize your weekly tasks</p>
           </div>
           <div className="flex space-x-3">
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <Button
+                variant={calendarView === 'overview' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCalendarView('overview')}
+              >
+                Overview
+              </Button>
+              <Button
+                variant={calendarView === 'timeline' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCalendarView('timeline')}
+              >
+                Timeline
+              </Button>
+            </div>
             <Button
               onClick={() => {
                 setEditingTask(null);
@@ -225,19 +250,31 @@ export default function TaskPlanning() {
         </Card>
       </div>
 
-      {/* Weekly Calendar */}
-      <WeeklyCalendar
-        tasks={tasks}
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-        onTaskEdit={handleEditTask}
-        onTaskDelete={handleDeleteTask}
-        onTaskCreate={(date) => {
-          setSelectedDate(date);
-          setEditingTask(null);
-          setIsTaskModalOpen(true);
-        }}
-      />
+      {/* Calendar Views */}
+      {calendarView === 'overview' ? (
+        <WeeklyCalendar
+          tasks={tasks}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          onTaskEdit={handleEditTask}
+          onTaskDelete={handleDeleteTask}
+          onTaskCreate={(date) => {
+            setSelectedDate(date);
+            setEditingTask(null);
+            setDragTaskData(null);
+            setIsTaskModalOpen(true);
+          }}
+        />
+      ) : (
+        <TimeBasedCalendar
+          tasks={tasks}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          onTaskEdit={handleEditTask}
+          onTaskDelete={handleDeleteTask}
+          onTaskCreate={handleDragTaskCreate}
+        />
+      )}
 
       {/* Task Modal */}
       <TaskModal
@@ -249,7 +286,9 @@ export default function TaskPlanning() {
         onSuccess={handleTaskCreated}
         task={editingTask}
         projects={projects}
-        defaultDate={selectedDate}
+        defaultDate={dragTaskData?.date || selectedDate}
+        defaultStartTime={dragTaskData?.startTime}
+        defaultEndTime={dragTaskData?.endTime}
       />
     </div>
   );
