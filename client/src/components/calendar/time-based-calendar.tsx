@@ -135,6 +135,13 @@ export default function TimeBasedCalendar({
     const startTime = setMinutes(setHours(dragStart.date, dragStart.hour), dragStart.minute);
     const endTime = setMinutes(setHours(dragEnd.date, dragEnd.hour), dragEnd.minute);
     
+    console.log('Drag selection:', {
+      dragStart: { hour: dragStart.hour, minute: dragStart.minute },
+      dragEnd: { hour: dragEnd.hour, minute: dragEnd.minute },
+      startTime: startTime.toLocaleTimeString(),
+      endTime: endTime.toLocaleTimeString()
+    });
+    
     // Ensure end time is after start time
     const finalStartTime = startTime < endTime ? startTime : endTime;
     const finalEndTime = startTime < endTime ? endTime : startTime;
