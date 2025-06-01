@@ -167,8 +167,12 @@ export default function TaskModal({
 
     // Convert time strings to full datetime
     const baseDate = new Date(data.date);
-    const startDateTime = new Date(baseDate);
-    const endDateTime = new Date(baseDate);
+    // Ensure we're using today's date in local timezone
+    const today = new Date();
+    const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const startDateTime = new Date(taskDate);
+    const endDateTime = new Date(taskDate);
     
     const [startHour, startMinute] = data.startTime.split(':').map(Number);
     const [endHour, endMinute] = data.endTime.split(':').map(Number);
@@ -182,7 +186,7 @@ export default function TaskModal({
       projectId: Number(data.projectId),
       startTime: startDateTime.toISOString(),
       endTime: endDateTime.toISOString(),
-      date: baseDate.toISOString(),
+      date: taskDate.toISOString(),
     };
 
     console.log('Submitting task data:', taskData);
