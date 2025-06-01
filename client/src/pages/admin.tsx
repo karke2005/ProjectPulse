@@ -338,83 +338,84 @@ export default function Admin() {
                   </div>
                   
                   {selectedUserId === userSubmission.user.id && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <Tabs defaultValue="tasks" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="tasks">Task Plan ({format(selectedDate, 'MMM dd')})</TabsTrigger>
-                          <TabsTrigger value="timesheet">Timesheet ({format(yesterday, 'MMM dd')})</TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="tasks" className="mt-4">
-                          {userTasks.length > 0 ? (
-                            <div className="space-y-2">
-                              {userTasks.map((task) => (
-                                <div key={task.id} className="flex items-center justify-between p-2 bg-white rounded border border-gray-100">
-                                  <div className="flex-1">
-                                    <div className="font-medium text-gray-900 text-xs">{task.title}</div>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center space-x-2 ml-2">
-                                    <Badge 
-                                      className="text-xs"
-                                      style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
-                                    >
-                                      {task.project.name}
-                                    </Badge>
-                                    <span className="text-xs text-gray-500">
-                                      {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                              {isSubmitted && userSubmission.submission && (
-                                <div className="mt-3 pt-2 border-t border-gray-100 text-xs text-gray-500">
-                                  Submitted: {format(new Date(userSubmission.submission.submittedAt), 'MMM dd, h:mm a')}
-                                  {userSubmission.isLate && <span className="text-orange-600"> (Late)</span>}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="text-center py-6 text-gray-400 text-xs">
-                              No tasks planned for this date
-                            </div>
+                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-4">
+                      {/* Task Plan Block */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="text-xs font-medium text-blue-900 mb-3 flex items-center justify-between">
+                          <span>Task Plan ({format(selectedDate, 'MMM dd')})</span>
+                          {isSubmitted && userSubmission.submission && (
+                            <span className="text-xs text-blue-700">
+                              Submitted: {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                              {userSubmission.isLate && <span className="text-orange-600"> (Late)</span>}
+                            </span>
                           )}
-                        </TabsContent>
-                        
-                        <TabsContent value="timesheet" className="mt-4">
-                          {userTimesheets.length > 0 ? (
-                            <div className="space-y-2">
-                              {userTimesheets.map((timesheet) => (
-                                <div key={timesheet.id} className="flex items-center justify-between p-2 bg-white rounded border border-gray-100">
-                                  <div className="flex-1">
-                                    <div className="font-medium text-gray-900 text-xs">{timesheet.task.title}</div>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      {timesheet.actualHours}h worked
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center space-x-2 ml-2">
-                                    <Badge 
-                                      className="text-xs"
-                                      style={{ backgroundColor: `${timesheet.task.project.color}20`, color: timesheet.task.project.color }}
-                                    >
-                                      {timesheet.task.project.name}
-                                    </Badge>
-                                    <Badge className={`text-xs ${timesheet.status === 'finished' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                      {timesheet.status === 'finished' ? 'Completed' : 'Moved to Tomorrow'}
-                                    </Badge>
+                        </div>
+                        {userTasks.length > 0 ? (
+                          <div className="space-y-2">
+                            {userTasks.map((task) => (
+                              <div key={task.id} className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 text-xs">{task.title}</div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-6 text-gray-400 text-xs">
-                              No timesheet entries for this date
-                            </div>
-                          )}
-                        </TabsContent>
-                      </Tabs>
+                                <div className="flex items-center space-x-2 ml-2">
+                                  <Badge 
+                                    className="text-xs"
+                                    style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
+                                  >
+                                    {task.project.name}
+                                  </Badge>
+                                  <span className="text-xs text-gray-500">
+                                    {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4 text-blue-400 text-xs">
+                            No tasks planned for this date
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Timesheet Block */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="text-xs font-medium text-green-900 mb-3">
+                          Timesheet ({format(yesterday, 'MMM dd')})
+                        </div>
+                        {userTimesheets.length > 0 ? (
+                          <div className="space-y-2">
+                            {userTimesheets.map((timesheet) => (
+                              <div key={timesheet.id} className="flex items-center justify-between p-2 bg-white rounded border border-green-100">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 text-xs">{timesheet.task.title}</div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {timesheet.actualHours}h worked
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 ml-2">
+                                  <Badge 
+                                    className="text-xs"
+                                    style={{ backgroundColor: `${timesheet.task.project.color}20`, color: timesheet.task.project.color }}
+                                  >
+                                    {timesheet.task.project.name}
+                                  </Badge>
+                                  <Badge className={`text-xs ${timesheet.status === 'finished' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                    {timesheet.status === 'finished' ? 'Completed' : 'Moved to Tomorrow'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4 text-green-400 text-xs">
+                            No timesheet entries for this date
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
