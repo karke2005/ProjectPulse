@@ -353,7 +353,7 @@ export default function Admin() {
                           </div>
                           {userTasks.length > 0 ? (
                             <div className="space-y-2">
-                              {userTasks.map((task) => (
+                              {userTasks.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).map((task) => (
                                 <div key={task.id} className="p-2 bg-white rounded border border-blue-100">
                                   <div className="font-medium text-gray-900 text-xs">{task.title}</div>
                                   <div className="text-xs text-gray-500 mt-1">
