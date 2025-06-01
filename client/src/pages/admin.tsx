@@ -1,16 +1,40 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import type { UserSubmissionStatus, TaskWithProject, TimesheetWithTask } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertProjectSchema } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { UserSubmissionStatus, TaskWithProject, TimesheetWithTask, InsertProject } from "@shared/schema";
 
 export default function Admin() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [showProjectForm, setShowProjectForm] = useState(false);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const form = useForm<InsertProject>({
+    resolver: zodResolver(insertProjectSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      color: "#3B82F6",
+      startDate: new Date(),
+      endDate: new Date(),
+      invoiceAmount: 0,
+    },
+  });
 
   // Redirect if not admin
   if (user?.role !== 'admin') {
@@ -61,6 +85,30 @@ export default function Admin() {
   const timesheetSubmittedCount = employeeSubmissions.filter(us => usersWithTimesheets.has(us.user.id)).length;
   const timesheetMissingCount = totalUsers - timesheetSubmittedCount;
 
+  const createProjectMutation = useMutation({
+    mutationFn: (data: InsertProject) => apiRequest('POST', '/api/projects', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      toast({
+        title: "Success",
+        description: "Project created successfully",
+      });
+      form.reset();
+      setShowProjectForm(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: InsertProject) => {
+    createProjectMutation.mutate(data);
+  };
+
   const handleViewUserTasks = (userId: number) => {
     setSelectedUserId(selectedUserId === userId ? null : userId);
   };
@@ -75,6 +123,10 @@ export default function Admin() {
             <p className="text-gray-600 mt-1">Monitor team task plans and timesheet submissions</p>
           </div>
           <div className="flex space-x-3">
+            <Button onClick={() => setShowProjectForm(!showProjectForm)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Project
+            </Button>
             <input
               type="date"
               value={format(selectedDate, 'yyyy-MM-dd')}
@@ -84,6 +136,133 @@ export default function Admin() {
           </div>
         </div>
       </div>
+
+      {/* Project Form */}
+      {showProjectForm && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Create New Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter project name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="color"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Color</FormLabel>
+                        <FormControl>
+                          <Input type="color" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => field.onChange(new Date(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => field.onChange(new Date(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="invoiceAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Amount ($)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="0.00" 
+                            value={field.value || ''}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter project description" 
+                          className="resize-none"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex space-x-3">
+                  <Button type="submit" disabled={createProjectMutation.isPending}>
+                    {createProjectMutation.isPending ? "Creating..." : "Create Project"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setShowProjectForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Simple Status Message */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -159,20 +338,53 @@ export default function Admin() {
                   
                   {selectedUserId === userSubmission.user.id && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="text-xs text-gray-600">
-                        <div className="mb-1">
-                          <span className="font-medium">Task Plan:</span> {userSubmission.taskCount} tasks scheduled for today
+                      <div className="text-xs text-gray-600 mb-3">
+                        <div className="mb-2">
+                          <span className="font-medium">Task Plan ({format(selectedDate, 'MMM dd')}):</span> {userSubmission.taskCount} tasks
                         </div>
-                        <div>
-                          <span className="font-medium">Timesheet:</span> {hasTimesheet ? 'Submitted for yesterday' : 'No timesheet submitted for yesterday'}
+                        <div className="mb-2">
+                          <span className="font-medium">Timesheet ({format(yesterday, 'MMM dd')}):</span> {hasTimesheet ? 'Submitted' : 'Not submitted'}
                         </div>
-                        {isSubmitted && userSubmission.submission && (
-                          <div className="mt-1">
-                            <span className="font-medium">Submitted at:</span> {format(new Date(userSubmission.submission.submittedAt), 'MMM dd, h:mm a')}
-                            {userSubmission.isLate && <span className="text-orange-600"> (Late submission)</span>}
-                          </div>
-                        )}
                       </div>
+                      
+                      {/* Task List */}
+                      {userTasks.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-gray-700 mb-2">Today's Tasks:</div>
+                          {userTasks.map((task) => (
+                            <div key={task.id} className="flex items-center justify-between p-2 bg-white rounded border border-gray-100">
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 text-xs">{task.title}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 ml-2">
+                                <Badge 
+                                  className="text-xs"
+                                  style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
+                                >
+                                  {task.project.name}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-3 text-gray-400 text-xs">
+                          No tasks planned for today
+                        </div>
+                      )}
+                      
+                      {isSubmitted && userSubmission.submission && (
+                        <div className="mt-3 pt-2 border-t border-gray-100 text-xs text-gray-500">
+                          Submitted: {format(new Date(userSubmission.submission.submittedAt), 'MMM dd, h:mm a')}
+                          {userSubmission.isLate && <span className="text-orange-600"> (Late)</span>}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
