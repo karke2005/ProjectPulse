@@ -26,6 +26,11 @@ export function useAuth() {
         title: "Success",
         description: "Logged in successfully",
       });
+      
+      // Redirect admin users to admin page
+      if (data.user.role === 'admin') {
+        window.location.href = '/admin';
+      }
     },
     onError: (error: Error) => {
       toast({
