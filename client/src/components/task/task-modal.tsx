@@ -70,6 +70,13 @@ export default function TaskModal({
   // Reset form when modal opens/closes or task changes
   useEffect(() => {
     if (isOpen) {
+      console.log('TaskModal useEffect - Props received:', {
+        task: !!task,
+        defaultDate: defaultDate?.toISOString(),
+        defaultStartTime: defaultStartTime?.toLocaleTimeString(),
+        defaultEndTime: defaultEndTime?.toLocaleTimeString()
+      });
+      
       if (task) {
         // Editing existing task
         const taskDate = new Date(task.date);
@@ -89,6 +96,13 @@ export default function TaskModal({
         // Creating new task
         const startTimeStr = defaultStartTime ? format(defaultStartTime, "HH:mm") : "09:00";
         const endTimeStr = defaultEndTime ? format(defaultEndTime, "HH:mm") : "10:00";
+        
+        console.log('Setting form times:', {
+          startTimeStr,
+          endTimeStr,
+          defaultStartTime: defaultStartTime?.toLocaleTimeString(),
+          defaultEndTime: defaultEndTime?.toLocaleTimeString()
+        });
         
         form.reset({
           title: "",

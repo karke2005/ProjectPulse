@@ -79,6 +79,11 @@ export default function TaskPlanning() {
   };
 
   const handleDragTaskCreate = (date: Date, startTime: Date, endTime: Date) => {
+    console.log('Setting drag task data:', {
+      date: date.toISOString(),
+      startTime: startTime.toLocaleTimeString(),
+      endTime: endTime.toLocaleTimeString()
+    });
     setDragTaskData({ date, startTime, endTime });
     setEditingTask(null);
     setIsTaskModalOpen(true);
