@@ -1,0 +1,319 @@
+Project Management App Framework
+This document outlines the design and planning for a Project Management App that includes task planning, timesheet filing, admin monitoring, and robust user settings. No code is generated here—this is purely a design and planning document intended for use as a blueprint.
+
+1. Tech Stack
+Layer	Tools & Libraries
+Frontend	React + Vite, Tailwind CSS
+Calendar	FullCalendar
+Gantt View	Frappe Gantt
+Backend	Node.js (Express)
+Database	MongoDB (with Mongoose)
+Authentication	JWT-based authentication
+Email / Notifications	Email service (SMTP or a third-party API)
+Deployment	Vercel (Frontend), Render/Cyclic (Backend)
+
+2. Core Functional Features
+2.1. Stage 1 – Task Planning
+A. User View (Task Planning via Calendar)
+Weekly calendar view powered by FullCalendar.
+
+Task CRUD Operations (Create, Edit, Delete) allowed for today and future dates only (past dates are read-only).
+
+Task Details:
+
+Title
+
+Linked project (selection from pre-created projects)
+
+Start/End time (auto-set via drag or click interactions)
+
+Task Plan Submission Tracking:
+
+The system records whether the task plan for the day was submitted and at what time.
+
+B. Admin View (Project & Task Plan Monitoring)
+Project Management:
+
+Create new projects with details such as name, start date, end date, and color coding.
+
+Gantt Chart Visualization:
+
+View planned tasks across projects using Frappe Gantt.
+
+Task Plan Monitoring Dashboard:
+
+Display a list of all users with columns for:
+
+User Name
+
+Task Plan Submitted? (Yes/No)
+
+Time of Submission
+
+Number of Tasks Submitted
+
+Highlight users who have not submitted their plan by a specified time (e.g., after 11:00 AM).
+
+Detailed User Task Plans:
+
+Ability to click on a user and review the list of tasks planned by that user.
+
+Admin may add comments or feedback on task plans if needed.
+
+2.2. Stage 2 – Timesheet Logging & Task Closure
+A. Timesheet Page (User)
+Daily Timesheet Entry:
+
+Only today’s tasks are visible.
+
+User logs actual work hours for each task.
+
+Task Finalization Options:
+
+Mark as Finished: The task is completed and becomes read-only.
+
+Move to Tomorrow: The task is rescheduled for the next working day.
+
+Mandatory Input: When a task is moved, the user must provide a reason for deferral (e.g., "waiting for review", "time constraints").
+
+Data Handling:
+
+Each timesheet entry includes a status flag indicating if a task is "finished" or "moved_to_tomorrow," along with the optional deferral reason.
+
+B. Admin Timesheet and Actuals Monitoring
+Plan vs. Actual Gantt Chart Comparison:
+
+Visual display of planned tasks versus actual logged hours.
+
+Highlights any task delays or deferrals.
+
+Reporting:
+
+Provides insights on task deferrals (e.g., frequency, reasons) to help identify bottlenecks.
+
+2.3. Authentication & User Profile Settings
+A. User Self-Service Options
+Login & Registration:
+
+Standard login with JWT-based authentication.
+
+Password Reset:
+
+"Forgot Password" functionality with secure email-based reset.
+
+Profile Settings:
+
+Update name and password.
+
+(Optional) Upload a profile picture.
+
+B. Admin-Level Controls
+User Management:
+
+Admin can view all user profiles.
+
+Admin can manually reset a user’s password if needed.
+
+Email Verification & Two-Factor Authentication:
+
+(Optional Enhancement) Enable email verification upon signup and add two-factor authentication for enhanced security.
+
+2.4. Notification & Email Reminder System
+A. Scheduled Reminders
+11:00 AM Task Plan Reminder:
+
+Purpose: Remind users to fill in their task plan for the day.
+
+Method:
+
+Auto-triggered email sent to the user’s pre-configured notification email(s).
+
+Optional in-app notification.
+
+Content:
+
+Includes a link to the calendar/task planning page.
+
+Reminds users who have not yet submitted a task plan.
+
+7:00 PM Timesheet Reminder (or user-defined time):
+
+Purpose: Prompt users to complete their daily timesheet entry.
+
+Method:
+
+Email sent at 7:00 PM (or a time defined by the user) if the timesheet has not yet been saved.
+
+Content:
+
+Summary of pending tasks.
+
+Call-to-action to finalize timesheet entries (either "Finish" or "Move to Tomorrow").
+
+B. Admin Notification Overview
+Dashboard for Task Plan Status:
+
+The admin page includes data showing the submission status of task plans for all users.
+
+Admin can see detailed task lists for each user along with submission timestamps.
+
+C. User Settings for Notifications:
+Notification Email Configuration:
+
+Users can set or update their notification email address.
+
+Users can also set a preferred timesheet reminder time if different from the default.
+
+3. Data Models Overview
+A. User
+json
+Copy
+Edit
+{
+  _id,
+  username,
+  passwordHash,
+  role: "admin" | "user",
+  notificationEmail: "user@example.com",
+  timesheetReminderTime: "HH:MM"
+}
+B. Project
+json
+Copy
+Edit
+{
+  _id,
+  name,
+  startDate,
+  endDate,
+  color,
+  createdBy
+}
+C. Task (Planned)
+json
+Copy
+Edit
+{
+  _id,
+  projectId,
+  userId,
+  title,
+  start,
+  end,
+  createdOn
+}
+D. Timesheet (Actual)
+json
+Copy
+Edit
+{
+  _id,
+  userId,
+  taskId,
+  date,
+  actualHours,
+  status: "finished" | "moved_to_tomorrow",
+  reason: "optional string if moved"
+}
+E. Task Plan Submission Log
+json
+Copy
+Edit
+{
+  userId,
+  date,
+  taskPlanSubmitted: true,
+  submissionTime: "HH:MM AM/PM"
+}
+4. Folder & Project Structure (Conceptual)
+A. Frontend Structure
+components/
+
+CalendarView
+
+TaskModal
+
+GanttView
+
+TimesheetForm
+
+pages/
+
+UserCalendar (Task planning)
+
+AdminDashboard (Monitoring and reports)
+
+TimesheetPage
+
+Login (Authentication)
+
+services/
+
+API interactions
+
+Authentication service
+
+B. Backend Structure
+routes/
+
+authRoutes.js
+
+projectRoutes.js
+
+taskRoutes.js
+
+timesheetRoutes.js
+
+models/
+
+User.js
+
+Project.js
+
+Task.js
+
+Timesheet.js
+
+controllers/
+
+Business logic for handling requests
+
+middlewares/
+
+Authentication guard
+
+Error handling
+
+5. Optional Enhancements (Future Considerations)
+Dashboard Analytics (Admin): Visual widgets (task completion rates, user performance, time variance)
+
+Export Reports: Ability to export data (PDF/Excel) for both task plans and timesheet logs.
+
+Activity Log / Audit Trail: Track actions (create/update/delete) for better traceability.
+
+Task Priority & Status Tagging: Adding tags like Low/Medium/High priority and status labels (In Progress, On Hold, Blocked).
+
+Comments on Tasks: Enable users to add comments on individual tasks for collaboration.
+
+Recurring Tasks: Options for scheduling repetitive tasks.
+
+Billable Hours Tracking: Mark hours as billable and generate invoices if needed.
+
+6. Administrative Summary
+Admin Capabilities:
+Create, update, and manage projects along with visual Gantt chart views.
+
+Monitor daily task plan submission statuses and review detailed user task plans.
+
+Reset user passwords and manage user notification settings.
+
+Oversee email reminder system for both task planning (11:00 AM) and timesheet filing (7:00 PM or user-defined).
+
+User Capabilities:
+Plan daily tasks in the calendar and log actual hours via the timesheet page.
+
+Choose to mark tasks as finished or defer them (with reasons) to the next day.
+
+Manage profile settings including password and notification email.
+
+Receive timely email notifications as reminders for task planning and timesheet completion.
