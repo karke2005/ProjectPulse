@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/auth";
 import DeferModal from "@/components/task/defer-modal";
-import type { TaskWithProject, TimesheetWithTask } from "@shared/schema";
+import { StatusBanner } from "@/components/ui/status-banner";
+import type { TaskWithProject, TimesheetWithTask, TaskPlanSubmission } from "@shared/schema";
 
 export default function Timesheet() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -28,6 +29,16 @@ export default function Timesheet() {
 
   const { data: timesheets = [] } = useQuery<TimesheetWithTask[]>({
     queryKey: ['/api/timesheets', { date: selectedDate.toISOString() }],
+  });
+
+  const todayString = format(today, 'yyyy-MM-dd');
+  
+  const { data: submissionStatus } = useQuery<{ submitted: boolean; submission: TaskPlanSubmission | null }>({
+    queryKey: ['/api/task-plans/status', { date: todayString }],
+  });
+
+  const { data: timesheetStatus } = useQuery({
+    queryKey: ['/api/timesheets/status', { date: todayString }],
   });
 
   const createTimesheetMutation = useMutation({
@@ -141,6 +152,22 @@ export default function Timesheet() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Status Banner */}
+      <StatusBanner 
+        taskPlanStatus={{
+          submitted: submissionStatus?.submitted || false,
+          submission: submissionStatus?.submission ? {
+            submittedAt: submissionStatus.submission.submittedAt.toString()
+          } : null
+        }}
+        timesheetStatus={{
+          submitted: timesheetStatus?.submitted || false,
+          submission: timesheetStatus?.submission ? {
+            submittedAt: timesheetStatus.submission.submittedAt.toString()
+          } : null
+        }}
+      />
+      
       {/* Page Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center">

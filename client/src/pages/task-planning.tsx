@@ -36,6 +36,10 @@ export default function TaskPlanning() {
     queryKey: ['/api/task-plans/status', { date: todayString }],
   });
 
+  const { data: timesheetStatus } = useQuery({
+    queryKey: ['/api/timesheets/status', { date: todayString }],
+  });
+
   const submitPlanMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/task-plans/submit', { date: todayString }),
     onSuccess: () => {
@@ -152,6 +156,12 @@ export default function TaskPlanning() {
           submitted: submissionStatus?.submitted || false,
           submission: submissionStatus?.submission ? {
             submittedAt: submissionStatus.submission.submittedAt.toString()
+          } : null
+        }}
+        timesheetStatus={{
+          submitted: timesheetStatus?.submitted || false,
+          submission: timesheetStatus?.submission ? {
+            submittedAt: timesheetStatus.submission.submittedAt.toString()
           } : null
         }}
       />

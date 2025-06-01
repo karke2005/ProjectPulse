@@ -361,6 +361,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/timesheets/status", authenticateToken, async (req: any, res) => {
+    try {
+      const { date } = req.query;
+      const checkDate = date ? new Date(date) : new Date();
+      
+      // Get user's tasks for the date
+      const tasks = await storage.getTasksByUser(req.user.id, checkDate);
+      
+      // Get timesheets for the date
+      const timesheets = await storage.getTimesheetsByUser(req.user.id, checkDate);
+      
+      // Check if all tasks have timesheets
+      const tasksWithTimesheets = tasks.filter(task => 
+        timesheets.some(timesheet => timesheet.taskId === task.id)
+      );
+      
+      const allTasksCompleted = tasks.length > 0 && tasksWithTimesheets.length === tasks.length;
+      
+      // Find the most recent submission time
+      const mostRecentTimesheet = timesheets.length > 0 
+        ? timesheets.reduce((latest, current) => 
+            new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
+          )
+        : null;
+      
+      res.json({
+        submitted: allTasksCompleted,
+        totalTasks: tasks.length,
+        completedTasks: tasksWithTimesheets.length,
+        submission: mostRecentTimesheet ? {
+          submittedAt: mostRecentTimesheet.createdAt
+        } : null
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/timesheets", authenticateToken, async (req: any, res) => {
     try {
       const timesheetData = insertTimesheetSchema.parse({
