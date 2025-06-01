@@ -25,9 +25,9 @@ export function StatusBanner({ taskPlanStatus, timesheetStatus }: StatusBannerPr
     <div className="space-y-3 mb-6">
       {/* Task Plan Status */}
       {taskPlanStatus.submitted ? (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
+        <Alert className="border-green-100 bg-green-25">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-green-700">
             Task plan submitted on{" "}
             {taskPlanStatus.submission?.submittedAt 
               ? format(new Date(taskPlanStatus.submission.submittedAt), "MMM d, yyyy 'at' h:mm a")

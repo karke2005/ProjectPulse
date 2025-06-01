@@ -60,6 +60,10 @@
   }
 }
 
+.bg-green-25 {
+  background-color: #f0fdf4;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -13,6 +13,7 @@ interface TimeBasedCalendarProps {
   onTaskEdit: (task: TaskWithProject) => void;
   onTaskDelete: (taskId: number) => void;
   onTaskCreate: (date: Date, startTime: Date, endTime: Date) => void;
+  isSubmitted?: boolean;
 }
 
 export default function TimeBasedCalendar({
@@ -22,6 +23,7 @@ export default function TimeBasedCalendar({
   onTaskEdit,
   onTaskDelete,
   onTaskCreate,
+  isSubmitted = false,
 }: TimeBasedCalendarProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ date: Date; hour: number; minute: number } | null>(null);
@@ -272,15 +274,24 @@ export default function TimeBasedCalendar({
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                              <DropdownMenuItem onClick={() => onTaskEdit(task)}>
-                                Edit Task
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => onTaskDelete(task.id)}
-                                className="text-red-600"
-                              >
-                                Delete Task
-                              </DropdownMenuItem>
+                              {!isSubmitted && (
+                                <>
+                                  <DropdownMenuItem onClick={() => onTaskEdit(task)}>
+                                    Edit Task
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => onTaskDelete(task.id)}
+                                    className="text-red-600"
+                                  >
+                                    Delete Task
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {isSubmitted && (
+                                <DropdownMenuItem disabled>
+                                  Task plan submitted - editing disabled
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
