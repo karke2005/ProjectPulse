@@ -152,21 +152,21 @@ export default function TaskPlanning() {
             <h2 className="text-2xl font-bold text-gray-900">Task Planning</h2>
             <p className="text-gray-600 mt-1">Plan and organize your weekly tasks</p>
           </div>
-          <div className="flex space-x-3">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+          <div className="flex space-x-2">
+            <div className="flex items-center bg-gray-100 rounded-md p-0.5">
               <Button
                 variant={calendarView === 'overview' ? 'default' : 'ghost'}
-                size="sm"
+                className="text-xs px-2 py-1 h-6"
                 onClick={() => setCalendarView('overview')}
               >
-                Overview
+                Today
               </Button>
               <Button
                 variant={calendarView === 'timeline' ? 'default' : 'ghost'}
-                size="sm"
+                className="text-xs px-2 py-1 h-6"
                 onClick={() => setCalendarView('timeline')}
               >
-                Timeline
+                Week
               </Button>
             </div>
             <Button
@@ -174,18 +174,17 @@ export default function TaskPlanning() {
                 setEditingTask(null);
                 setIsTaskModalOpen(true);
               }}
-              className="bg-primary text-white hover:bg-primary/90"
+              className="bg-primary text-white hover:bg-primary/90 text-xs px-3 py-1 h-6"
             >
-              <i className="fas fa-plus mr-2"></i>
-              New Task
+              + Task
             </Button>
             <Button
               onClick={handleSubmitPlan}
               disabled={submissionStatus?.submitted || submitPlanMutation.isPending}
               variant={submissionStatus?.submitted ? "secondary" : "default"}
+              className="text-xs px-3 py-1 h-6"
             >
-              <i className="fas fa-paper-plane mr-2"></i>
-              {submissionStatus?.submitted ? "Plan Submitted" : "Submit Plan"}
+              {submissionStatus?.submitted ? "Submitted" : "Submit Plan"}
             </Button>
           </div>
         </div>
