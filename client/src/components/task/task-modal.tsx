@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { insertTaskSchema, type TaskWithProject, type Project } from "@shared/schema";
 import { apiRequest } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { format } from "date-fns";
 import { z } from "zod";
 
@@ -52,6 +53,7 @@ export default function TaskModal({
 }: TaskModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const isEditing = !!task;
 
   const form = useForm<TaskFormData>({
@@ -104,7 +106,7 @@ export default function TaskModal({
           defaultEndTime: defaultEndTime?.toLocaleTimeString()
         });
         
-        const user = getCurrentUser();
+
         form.reset({
           title: "",
           description: "",
