@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/auth";
 import TaskModal from "@/components/task/task-modal";
 import WeeklyCalendar from "@/components/calendar/weekly-calendar";
 import TimeBasedCalendar from "@/components/calendar/time-based-calendar";
+import { StatusBanner } from "@/components/ui/status-banner";
 import type { TaskWithProject, Project, TaskPlanSubmission } from "@shared/schema";
 
 export default function TaskPlanning() {
@@ -145,6 +146,11 @@ export default function TaskPlanning() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Status Banner */}
+      <StatusBanner 
+        taskPlanStatus={submissionStatus || { submitted: false }}
+      />
+      
       {/* Page Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center">
@@ -175,7 +181,8 @@ export default function TaskPlanning() {
                 setDragTaskData(null);
                 setIsTaskModalOpen(true);
               }}
-              className="bg-primary text-white hover:bg-primary/90 text-xs px-3 py-1 h-6"
+              disabled={submissionStatus?.submitted}
+              className="bg-primary text-white hover:bg-primary/90 text-xs px-3 py-1 h-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               + Task
             </Button>

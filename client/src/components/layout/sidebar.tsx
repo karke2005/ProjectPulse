@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: "fas fa-chart-line" },
   { name: "Task Planning", href: "/task-planning", icon: "fas fa-calendar-alt" },
   { name: "Timesheet", href: "/timesheet", icon: "fas fa-clock" },
 ];
