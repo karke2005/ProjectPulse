@@ -143,6 +143,8 @@ export default function Admin() {
       <Tabs defaultValue="projects" className="space-y-4">
         <TabsList>
           <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="submissions">Task Plans</TabsTrigger>
+          <TabsTrigger value="user-tasks" disabled={!selectedUserId}>User Tasks</TabsTrigger>
         </TabsList>
 
         <TabsContent value="projects">
@@ -274,36 +276,186 @@ export default function Admin() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Existing Projects</CardTitle>
+                <CardTitle>Project Timeline & Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {projects.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-4 h-4 rounded"
-                          style={{ backgroundColor: project.color }}
-                        />
-                        <div>
-                          <div className="font-medium text-gray-900">{project.name}</div>
-                          <div className="text-sm text-gray-500">{project.description}</div>
+                <div className="space-y-4">
+                  {projects.map((project) => {
+                    const startDate = new Date(project.startDate);
+                    const endDate = new Date(project.endDate);
+                    const today = new Date();
+                    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const elapsedDays = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const progressPercentage = Math.min(Math.max((elapsedDays / totalDays) * 100, 0), 100);
+                    
+                    return (
+                      <div key={project.id} className="p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="w-4 h-4 rounded"
+                              style={{ backgroundColor: project.color }}
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900">{project.name}</div>
+                              <div className="text-sm text-gray-500">{project.description}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              ${((project.invoiceAmount || 0) / 100).toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {format(startDate, 'MMM dd')} - {format(endDate, 'MMM dd')}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Timeline Progress Bar */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>Timeline Progress</span>
+                            <span>{Math.round(progressPercentage)}% elapsed</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full transition-all duration-300"
+                              style={{ 
+                                width: `${progressPercentage}%`,
+                                backgroundColor: project.color 
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Fill Level Indicator */}
+                          <div className="flex justify-between items-center mt-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="text-xs text-gray-500">Fill Level:</div>
+                              <div className="flex space-x-1">
+                                {[1, 2, 3, 4, 5].map((level) => (
+                                  <div
+                                    key={level}
+                                    className={`w-3 h-3 rounded-sm ${
+                                      level <= Math.ceil(progressPercentage / 20)
+                                        ? 'bg-green-500'
+                                        : 'bg-gray-200'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs font-medium text-gray-700">
+                                {Math.ceil(progressPercentage / 20)}/5
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {totalDays - elapsedDays > 0 ? `${totalDays - elapsedDays} days left` : 'Completed'}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">
-                          ${((project.invoiceAmount || 0) / 100).toFixed(2)}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {format(new Date(project.startDate), 'MMM dd')} - {format(new Date(project.endDate), 'MMM dd')}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="submissions">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Task Plan Status - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {userSubmissions.map((userSubmission) => (
+                  <div key={userSubmission.user.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-xs font-medium text-white">
+                          {userSubmission.user.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{userSubmission.user.username}</div>
+                        <div className="text-xs text-gray-500">{userSubmission.taskCount} tasks</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      {userSubmission.submission ? (
+                        <>
+                          <Badge className="bg-green-100 text-green-800 text-xs">
+                            {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                          </Badge>
+                          {userSubmission.isLate && (
+                            <Badge className="bg-orange-100 text-orange-800 text-xs">Late</Badge>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => handleViewUserTasks(userSubmission.user.id)}
+                            disabled={userSubmission.taskCount === 0}
+                          >
+                            View
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant="destructive" className="bg-red-100 text-red-800 text-xs">
+                          Missing
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="user-tasks">
+          {selectedUserId && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Tasks for {userSubmissions.find(us => us.user.id === selectedUserId)?.user.username} - {format(selectedDate, 'MMM dd')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {userTasks.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="text-gray-400 text-sm">No tasks found for this date</div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {userTasks.map((task) => (
+                      <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 text-sm">{task.title}</div>
+                          <div className="text-xs text-gray-500 mt-1">{task.description}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge 
+                            className="text-xs"
+                            style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
+                          >
+                            {task.project.name}
+                          </Badge>
+                          <div className="text-xs text-gray-500">
+                            {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
