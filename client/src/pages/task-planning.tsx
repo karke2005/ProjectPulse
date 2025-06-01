@@ -7,6 +7,7 @@ import { format, addDays, startOfWeek, endOfWeek } from "date-fns";
 import { apiRequest } from "@/lib/auth";
 import TaskModal from "@/components/task/task-modal";
 import WeeklyCalendar from "@/components/calendar/weekly-calendar";
+import TimeBasedCalendar from "@/components/calendar/time-based-calendar";
 import type { TaskWithProject, Project, TaskPlanSubmission } from "@shared/schema";
 
 export default function TaskPlanning() {

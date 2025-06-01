@@ -39,18 +39,18 @@ export default function Sidebar() {
           <nav className="mt-8 flex-1 px-2 space-y-1">
             {navigation.map((item) => (
               <Link key={item.name} href={item.href}>
-                <a
+                <div
                   className={`${
                     isActive(item.href)
                       ? 'bg-primary-50 border-r-2 border-primary text-primary-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  } group flex items-center px-2 py-2 text-sm font-medium rounded-l-md`}
+                  } group flex items-center px-2 py-2 text-sm font-medium rounded-l-md cursor-pointer`}
                 >
                   <i className={`${item.icon} ${
                     isActive(item.href) ? 'text-primary' : 'text-gray-400'
                   } mr-3 text-sm`}></i>
                   {item.name}
-                </a>
+                </div>
               </Link>
             ))}
           </nav>
@@ -64,18 +64,18 @@ export default function Sidebar() {
               <nav className="mt-2 space-y-1">
                 {adminNavigation.map((item) => (
                   <Link key={item.name} href={item.href}>
-                    <a
+                    <div
                       className={`${
                         isActive(item.href)
                           ? 'bg-primary-50 border-r-2 border-primary text-primary-700'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } group flex items-center px-2 py-2 text-sm font-medium rounded-l-md`}
+                      } group flex items-center px-2 py-2 text-sm font-medium rounded-l-md cursor-pointer`}
                     >
                       <i className={`${item.icon} ${
                         isActive(item.href) ? 'text-primary' : 'text-gray-400'
                       } mr-3 text-sm`}></i>
                       {item.name}
-                    </a>
+                    </div>
                   </Link>
                 ))}
               </nav>
