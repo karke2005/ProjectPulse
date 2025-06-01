@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import type { UserSubmissionStatus, TaskWithProject } from "@shared/schema";
+import type { UserSubmissionStatus, TaskWithProject, TimesheetWithTask } from "@shared/schema";
 
 export default function Admin() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -33,6 +33,11 @@ export default function Admin() {
 
   const { data: userTasks = [] } = useQuery<TaskWithProject[]>({
     queryKey: [`/api/admin/user-tasks/${selectedUserId}`, { date: selectedDate.toISOString() }],
+    enabled: !!selectedUserId,
+  });
+
+  const { data: userTimesheets = [] } = useQuery<TimesheetWithTask[]>({
+    queryKey: [`/api/admin/user-timesheets/${selectedUserId}`, { date: selectedDate.toISOString() }],
     enabled: !!selectedUserId,
   });
 
@@ -66,77 +71,50 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Status Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">Task Plan Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{submittedCount} of {totalUsers}</div>
-                <div className="text-sm text-gray-600">employees submitted</div>
-              </div>
-              <div className="text-right">
-                {missingCount > 0 && (
-                  <div className="text-sm text-red-600">
-                    {missingCount} missing submissions
+      {/* Status Summary Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Daily Status - {format(selectedDate, 'MMM dd, yyyy')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">Task Plan Submissions</div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{submittedCount} of {totalUsers}</div>
+              <div className="text-sm text-gray-600">employees submitted</div>
+              {missingCount > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-500 mb-1">Missing:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {userSubmissions.filter(us => !us.submission).map(us => (
+                      <Badge key={us.user.id} variant="outline" className="text-xs">
+                        {us.user.username}
+                      </Badge>
+                    ))}
                   </div>
-                )}
-                {lateCount > 0 && (
-                  <div className="text-sm text-orange-600">
-                    {lateCount} late submissions
-                  </div>
-                )}
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">Timesheet Status</div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {userSubmissions.filter(us => us.user.id !== 1).length}
+              </div>
+              <div className="text-sm text-gray-600">employees tracked</div>
+              <div className="mt-2 text-xs text-gray-500">
+                View individual timesheets below
               </div>
             </div>
-            {missingCount > 0 && (
-              <div className="mt-3 pt-3 border-t">
-                <div className="text-xs text-gray-500 mb-1">Not submitted:</div>
-                <div className="flex flex-wrap gap-1">
-                  {userSubmissions.filter(us => !us.submission).map(us => (
-                    <Badge key={us.user.id} variant="outline" className="text-xs">
-                      {us.user.username}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">Timesheet Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {userSubmissions.filter(us => us.user.id !== 1).length}
-                </div>
-                <div className="text-sm text-gray-600">employees tracked</div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-600">
-                  Timesheet monitoring
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 pt-3 border-t">
-              <div className="text-xs text-gray-500">
-                Individual timesheet status visible in user details below
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Employee Submissions */}
+      {/* Employee Details */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Employee Submissions - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
+          <CardTitle className="text-base">Team Overview</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -151,75 +129,106 @@ export default function Admin() {
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-900">{userSubmission.user.username}</div>
-                      <div className="text-xs text-gray-500">{userSubmission.taskCount} tasks</div>
+                      <div className="text-xs text-gray-500">
+                        Task Plan: {userSubmission.taskCount} tasks
+                      </div>
                     </div>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     {userSubmission.submission ? (
-                      <>
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
-                        </Badge>
-                        {userSubmission.isLate && (
-                          <Badge className="bg-orange-100 text-orange-800 text-xs">Late</Badge>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={() => handleViewUserTasks(userSubmission.user.id)}
-                          disabled={userSubmission.taskCount === 0}
-                        >
-                          {selectedUserId === userSubmission.user.id ? 'Hide Tasks' : 'View Tasks'}
-                        </Button>
-                      </>
+                      <Badge className="bg-green-100 text-green-800 text-xs">
+                        Submitted {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                        {userSubmission.isLate && " (Late)"}
+                      </Badge>
                     ) : (
                       <Badge variant="destructive" className="bg-red-100 text-red-800 text-xs">
-                        Missing
+                        Not Submitted
                       </Badge>
                     )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => handleViewUserTasks(userSubmission.user.id)}
+                    >
+                      {selectedUserId === userSubmission.user.id ? 'Hide Details' : 'View Details'}
+                    </Button>
                   </div>
                 </div>
 
-                {/* Expanded User Tasks */}
+                {/* Expanded User Details */}
                 {selectedUserId === userSubmission.user.id && (
                   <div className="border-t border-gray-200 p-3 bg-gray-50">
-                    <div className="text-xs font-medium text-gray-900 mb-3">
-                      Tasks for {userSubmission.user.username} - {format(selectedDate, 'MMM dd')}
-                    </div>
-                    {userTasks.length === 0 ? (
-                      <div className="text-center py-4">
-                        <div className="text-gray-400 text-xs">No tasks found for this date</div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {userTasks.map((task) => (
-                          <div key={task.id} className="flex items-center justify-between p-2 bg-white rounded border">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 text-xs">{task.title}</div>
-                              {task.description && (
-                                <div className="text-xs text-gray-500 mt-1">{task.description}</div>
-                              )}
-                              <div className="text-xs text-gray-500 mt-1">
-                                {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2 ml-2">
-                              <Badge 
-                                className="text-xs"
-                                style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
-                              >
-                                {task.project.name}
-                              </Badge>
-                              <div className="text-xs text-gray-500">
-                                {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
-                              </div>
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Task Plan Section */}
+                      <div>
+                        <div className="text-xs font-medium text-gray-900 mb-3">
+                          Task Plan - {format(selectedDate, 'MMM dd')}
+                        </div>
+                        {userTasks.length === 0 ? (
+                          <div className="text-center py-4">
+                            <div className="text-gray-400 text-xs">No tasks planned</div>
                           </div>
-                        ))}
+                        ) : (
+                          <div className="space-y-2">
+                            {userTasks.map((task) => (
+                              <div key={task.id} className="p-2 bg-white rounded border">
+                                <div className="font-medium text-gray-900 text-xs">{task.title}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                  <Badge 
+                                    className="text-xs"
+                                    style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
+                                  >
+                                    {task.project.name}
+                                  </Badge>
+                                  <span className="text-xs text-gray-500">
+                                    {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* Timesheet Section */}
+                      <div>
+                        <div className="text-xs font-medium text-gray-900 mb-3">
+                          Timesheet - {format(selectedDate, 'MMM dd')}
+                        </div>
+                        {userTimesheets.length === 0 ? (
+                          <div className="text-center py-4">
+                            <div className="text-gray-400 text-xs">No time recorded</div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {userTimesheets.map((timesheet) => (
+                              <div key={timesheet.id} className="p-2 bg-white rounded border">
+                                <div className="font-medium text-gray-900 text-xs">{timesheet.task.title}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {timesheet.actualHours}h worked
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                  <Badge 
+                                    className="text-xs"
+                                    style={{ backgroundColor: `${timesheet.task.project.color}20`, color: timesheet.task.project.color }}
+                                  >
+                                    {timesheet.task.project.name}
+                                  </Badge>
+                                  <Badge className={`text-xs ${timesheet.status === 'finished' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                    {timesheet.status === 'finished' ? 'Completed' : 'Moved to Tomorrow'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
