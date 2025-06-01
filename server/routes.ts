@@ -423,6 +423,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/all-user-tasks", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const { date } = req.query;
+      const checkDate = date ? new Date(date) : new Date();
+      
+      // Get all users
+      const users = await storage.getAllUsers();
+      const allTasks = [];
+      
+      // Fetch tasks for each user
+      for (const user of users) {
+        const userTasks = await storage.getTasksByUser(user.id, checkDate);
+        allTasks.push(...userTasks);
+      }
+      
+      res.json(allTasks);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/user-tasks/:userId", authenticateToken, requireAdmin, async (req: any, res) => {
     try {
       const userId = parseInt(req.params.userId);

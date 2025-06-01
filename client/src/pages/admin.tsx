@@ -63,6 +63,10 @@ export default function Admin() {
     queryKey: ['/api/projects'],
   });
 
+  const { data: allUserTasks = [] } = useQuery<TaskWithProject[]>({
+    queryKey: ['/api/admin/all-user-tasks', { date: selectedDate.toISOString() }],
+  });
+
   // Calculate stats
   const totalUsers = userSubmissions.length;
   const submittedCount = userSubmissions.filter(us => us.submission).length;
@@ -288,6 +292,9 @@ export default function Admin() {
                     const elapsedDays = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                     const progressPercentage = Math.min(Math.max((elapsedDays / totalDays) * 100, 0), 100);
                     
+                    // Get tasks for this project
+                    const projectTasks = allUserTasks.filter(task => task.projectId === project.id);
+                    
                     return (
                       <div key={project.id} className="p-4 border border-gray-200 rounded-lg">
                         <div className="flex items-center justify-between mb-3">
@@ -352,6 +359,41 @@ export default function Admin() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Connected User Tasks */}
+                        {projectTasks.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-gray-100">
+                            <div className="text-xs text-gray-500 mb-2">
+                              Connected Tasks ({projectTasks.length})
+                            </div>
+                            <div className="space-y-2">
+                              {projectTasks.map((task) => {
+                                // Get user info for this task
+                                const taskUser = userSubmissions.find(us => us.user.id === task.userId)?.user;
+                                return (
+                                  <div key={task.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                                        <span className="text-xs font-medium text-white">
+                                          {taskUser?.username.charAt(0).toUpperCase() || 'U'}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <div className="font-medium text-gray-900">{task.title}</div>
+                                        <div className="text-gray-500">
+                                          {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-gray-500">
+                                      {taskUser?.username || 'Unknown User'}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
