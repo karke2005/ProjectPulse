@@ -115,7 +115,7 @@ export default function Admin() {
   });
 
   const handleViewUserTasks = (userId: number) => {
-    setSelectedUserId(userId);
+    setSelectedUserId(selectedUserId === userId ? null : userId);
   };
 
   const onSubmit = (data: ProjectFormData) => {
@@ -148,7 +148,6 @@ export default function Admin() {
         <TabsList>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="submissions">Task Plans</TabsTrigger>
-          <TabsTrigger value="user-tasks" disabled={!selectedUserId}>User Tasks</TabsTrigger>
         </TabsList>
 
         <TabsContent value="projects">
@@ -409,46 +408,89 @@ export default function Admin() {
               <CardTitle className="text-base">Task Plan Status - {format(selectedDate, 'MMM dd, yyyy')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {userSubmissions.map((userSubmission) => (
-                  <div key={userSubmission.user.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                        <span className="text-xs font-medium text-white">
-                          {userSubmission.user.username.charAt(0).toUpperCase()}
-                        </span>
+                  <div key={userSubmission.user.id} className="border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between p-3 hover:bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-xs font-medium text-white">
+                            {userSubmission.user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{userSubmission.user.username}</div>
+                          <div className="text-xs text-gray-500">{userSubmission.taskCount} tasks</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{userSubmission.user.username}</div>
-                        <div className="text-xs text-gray-500">{userSubmission.taskCount} tasks</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      {userSubmission.submission ? (
-                        <>
-                          <Badge className="bg-green-100 text-green-800 text-xs">
-                            {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                      
+                      <div className="flex items-center space-x-2">
+                        {userSubmission.submission ? (
+                          <>
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                            </Badge>
+                            {userSubmission.isLate && (
+                              <Badge className="bg-orange-100 text-orange-800 text-xs">Late</Badge>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => handleViewUserTasks(userSubmission.user.id)}
+                              disabled={userSubmission.taskCount === 0}
+                            >
+                              {selectedUserId === userSubmission.user.id ? 'Hide Tasks' : 'View Tasks'}
+                            </Button>
+                          </>
+                        ) : (
+                          <Badge variant="destructive" className="bg-red-100 text-red-800 text-xs">
+                            Missing
                           </Badge>
-                          {userSubmission.isLate && (
-                            <Badge className="bg-orange-100 text-orange-800 text-xs">Late</Badge>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs"
-                            onClick={() => handleViewUserTasks(userSubmission.user.id)}
-                            disabled={userSubmission.taskCount === 0}
-                          >
-                            View
-                          </Button>
-                        </>
-                      ) : (
-                        <Badge variant="destructive" className="bg-red-100 text-red-800 text-xs">
-                          Missing
-                        </Badge>
-                      )}
+                        )}
+                      </div>
                     </div>
+
+                    {/* Expanded User Tasks */}
+                    {selectedUserId === userSubmission.user.id && (
+                      <div className="border-t border-gray-200 p-3 bg-gray-50">
+                        <div className="text-xs font-medium text-gray-900 mb-3">
+                          Tasks for {userSubmission.user.username} - {format(selectedDate, 'MMM dd')}
+                        </div>
+                        {userTasks.length === 0 ? (
+                          <div className="text-center py-4">
+                            <div className="text-gray-400 text-xs">No tasks found for this date</div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {userTasks.map((task) => (
+                              <div key={task.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 text-xs">{task.title}</div>
+                                  {task.description && (
+                                    <div className="text-xs text-gray-500 mt-1">{task.description}</div>
+                                  )}
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 ml-2">
+                                  <Badge 
+                                    className="text-xs"
+                                    style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
+                                  >
+                                    {task.project.name}
+                                  </Badge>
+                                  <div className="text-xs text-gray-500">
+                                    {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -456,49 +498,7 @@ export default function Admin() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="user-tasks">
-          {selectedUserId && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  Tasks for {userSubmissions.find(us => us.user.id === selectedUserId)?.user.username} - {format(selectedDate, 'MMM dd')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {userTasks.length === 0 ? (
-                  <div className="text-center py-6">
-                    <div className="text-gray-400 text-sm">No tasks found for this date</div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {userTasks.map((task) => (
-                      <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900 text-sm">{task.title}</div>
-                          <div className="text-xs text-gray-500 mt-1">{task.description}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge 
-                            className="text-xs"
-                            style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
-                          >
-                            {task.project.name}
-                          </Badge>
-                          <div className="text-xs text-gray-500">
-                            {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+
       </Tabs>
     </div>
   );
