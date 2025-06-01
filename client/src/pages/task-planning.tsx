@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ export default function TaskPlanning() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
-  const today = new Date();
+  const weekStart = useMemo(() => startOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
+  const weekEnd = useMemo(() => endOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
+  const todayString = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []); // Stable date string
 
   const { data: tasks = [] } = useQuery<TaskWithProject[]>({
     queryKey: ['/api/tasks', { startDate: weekStart.toISOString(), endDate: weekEnd.toISOString() }],
@@ -32,11 +32,11 @@ export default function TaskPlanning() {
   });
 
   const { data: submissionStatus } = useQuery<{ submitted: boolean; submission: TaskPlanSubmission | null }>({
-    queryKey: ['/api/task-plans/status', { date: today.toISOString() }],
+    queryKey: ['/api/task-plans/status', { date: todayString }],
   });
 
   const submitPlanMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/task-plans/submit', { date: today.toISOString() }),
+    mutationFn: () => apiRequest('POST', '/api/task-plans/submit', { date: todayString }),
     onSuccess: () => {
       toast({
         title: "Success",
@@ -132,7 +132,7 @@ export default function TaskPlanning() {
   // Calculate stats
   const todayTasks = tasks.filter(task => {
     const taskDate = new Date(task.date);
-    return format(taskDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+    return format(taskDate, 'yyyy-MM-dd') === todayString;
   });
 
   const weekTasks = tasks.length;
