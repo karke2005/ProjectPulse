@@ -102,21 +102,23 @@ export default function TimeBasedCalendar({
     return { date, hour: Math.min(Math.max(hour, 6), 21), minute: Math.min(minute, 45) };
   };
 
-  const handleMouseDown = (event: React.MouseEvent, dayIndex: number) => {
-    if (isPastDate(weekDays[dayIndex])) return;
-    
+  const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
-    const position = getTimeSlotPosition(event, dayIndex);
-    setIsDragging(true);
-    setDragStart(position);
-    setDragEnd(position);
+    const position = getTimeSlotFromContainer(event);
+    if (position && !isPastDate(position.date)) {
+      setIsDragging(true);
+      setDragStart(position);
+      setDragEnd(position);
+    }
   };
 
-  const handleMouseMove = useCallback((event: React.MouseEvent, dayIndex: number) => {
+  const handleMouseMove = useCallback((event: React.MouseEvent) => {
     if (!isDragging || !dragStart) return;
     
-    const position = getTimeSlotPosition(event, dayIndex);
-    setDragEnd(position);
+    const position = getTimeSlotFromContainer(event);
+    if (position) {
+      setDragEnd(position);
+    }
   }, [isDragging, dragStart]);
 
   const handleMouseUp = useCallback(() => {
@@ -163,14 +165,14 @@ export default function TimeBasedCalendar({
     const startHour = dragStart.hour;
     const endHour = dragEnd.hour;
     
-    if (!isSameDay(day, startDay) && !isSameDay(day, endDay)) return false;
-    if (!isSameDay(day, startDay) && !isSameDay(day, endDay)) return false;
+    // Only highlight if we're on the same day as the drag
+    if (!isSameDay(day, startDay)) return false;
     
-    if (isSameDay(day, startDay) && isSameDay(day, endDay)) {
-      return hour >= Math.min(startHour, endHour) && hour <= Math.max(startHour, endHour);
-    }
+    // Highlight the full range between start and end hours
+    const minHour = Math.min(startHour, endHour);
+    const maxHour = Math.max(startHour, endHour);
     
-    return false;
+    return hour >= minHour && hour <= maxHour;
   };
 
   const getTaskStyle = (task: TaskWithProject) => {
@@ -285,8 +287,8 @@ export default function TimeBasedCalendar({
                         isPast ? 'bg-gray-50 cursor-not-allowed' : 'cursor-crosshair hover:bg-blue-50'
                       } ${isSelected ? 'bg-primary-100' : ''}`}
                       style={{ height: '60px' }}
-                      onMouseDown={(e) => handleMouseDown(e, dayIndex)}
-                      onMouseMove={(e) => handleMouseMove(e, dayIndex)}
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
                     >
                       {/* Render tasks in this time slot */}
                       {tasksInSlot.map((task) => (
