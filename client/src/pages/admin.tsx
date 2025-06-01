@@ -146,91 +146,11 @@ export default function Admin() {
                         Not Submitted
                       </Badge>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={() => handleViewUserTasks(userSubmission.user.id)}
-                    >
-                      {selectedUserId === userSubmission.user.id ? 'Hide Details' : 'View Details'}
-                    </Button>
+
                   </div>
                 </div>
 
-                {/* Expanded User Details */}
-                {selectedUserId === userSubmission.user.id && (
-                  <div className="border-t border-gray-200 p-3 bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Task Plan Section */}
-                      <div>
-                        <div className="text-xs font-medium text-gray-900 mb-3">
-                          Task Plan - {format(selectedDate, 'MMM dd')}
-                        </div>
-                        {userTasks.length === 0 ? (
-                          <div className="text-center py-4">
-                            <div className="text-gray-400 text-xs">No tasks planned</div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {userTasks.map((task) => (
-                              <div key={task.id} className="p-2 bg-white rounded border">
-                                <div className="font-medium text-gray-900 text-xs">{task.title}</div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  {format(new Date(task.startTime), 'h:mm a')} - {format(new Date(task.endTime), 'h:mm a')}
-                                </div>
-                                <div className="flex items-center justify-between mt-1">
-                                  <Badge 
-                                    className="text-xs"
-                                    style={{ backgroundColor: `${task.project.color}20`, color: task.project.color }}
-                                  >
-                                    {task.project.name}
-                                  </Badge>
-                                  <span className="text-xs text-gray-500">
-                                    {((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Timesheet Section */}
-                      <div>
-                        <div className="text-xs font-medium text-gray-900 mb-3">
-                          Timesheet - {format(selectedDate, 'MMM dd')}
-                        </div>
-                        {userTimesheets.length === 0 ? (
-                          <div className="text-center py-4">
-                            <div className="text-gray-400 text-xs">No time recorded</div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {userTimesheets.map((timesheet) => (
-                              <div key={timesheet.id} className="p-2 bg-white rounded border">
-                                <div className="font-medium text-gray-900 text-xs">{timesheet.task.title}</div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  {timesheet.actualHours}h worked
-                                </div>
-                                <div className="flex items-center justify-between mt-1">
-                                  <Badge 
-                                    className="text-xs"
-                                    style={{ backgroundColor: `${timesheet.task.project.color}20`, color: timesheet.task.project.color }}
-                                  >
-                                    {timesheet.task.project.name}
-                                  </Badge>
-                                  <Badge className={`text-xs ${timesheet.status === 'finished' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                    {timesheet.status === 'finished' ? 'Completed' : 'Moved to Tomorrow'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
