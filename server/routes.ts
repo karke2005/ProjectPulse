@@ -512,6 +512,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/all-timesheets", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const { date } = req.query;
+      const checkDate = date ? new Date(date) : new Date();
+      
+      // Get all users
+      const users = await storage.getAllUsers();
+      const allTimesheets = [];
+      
+      // Fetch timesheets for each user
+      for (const user of users) {
+        if (user.id !== 1) { // Exclude admin
+          const userTimesheets = await storage.getTimesheetsByUser(user.id, checkDate);
+          allTimesheets.push(...userTimesheets);
+        }
+      }
+      
+      res.json(allTimesheets);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -31,6 +31,14 @@ export default function Admin() {
     queryKey: ['/api/admin/user-submissions', { date: selectedDate.toISOString() }],
   });
 
+  // Get yesterday's date for timesheet status
+  const yesterday = new Date(selectedDate);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const { data: yesterdayTimesheets = [] } = useQuery<TimesheetWithTask[]>({
+    queryKey: ['/api/admin/all-timesheets', { date: yesterday.toISOString() }],
+  });
+
   const { data: userTasks = [] } = useQuery<TaskWithProject[]>({
     queryKey: [`/api/admin/user-tasks/${selectedUserId}`, { date: selectedDate.toISOString() }],
     enabled: !!selectedUserId,
@@ -47,6 +55,11 @@ export default function Admin() {
   const submittedCount = employeeSubmissions.filter(us => us.submission).length;
   const lateCount = employeeSubmissions.filter(us => us.isLate && us.submission).length;
   const missingCount = employeeSubmissions.filter(us => !us.submission).length;
+
+  // Calculate timesheet stats for yesterday
+  const usersWithTimesheets = new Set(yesterdayTimesheets.map(ts => ts.userId));
+  const timesheetSubmittedCount = employeeSubmissions.filter(us => usersWithTimesheets.has(us.user.id)).length;
+  const timesheetMissingCount = totalUsers - timesheetSubmittedCount;
 
   const handleViewUserTasks = (userId: number) => {
     setSelectedUserId(selectedUserId === userId ? null : userId);
@@ -83,6 +96,15 @@ export default function Admin() {
             </span>
           )}
         </div>
+        <div className="text-sm text-gray-900 mt-2">
+          <span className="font-medium">Timesheet Status ({format(yesterday, 'MMM dd, yyyy')}):</span>
+          <span className="ml-2">Timesheets: {timesheetSubmittedCount} of {totalUsers} submitted</span>
+          {timesheetMissingCount > 0 && (
+            <span className="ml-2 text-red-600">
+              • Missing: {employeeSubmissions.filter(us => !usersWithTimesheets.has(us.user.id)).map(us => us.user.username).join(', ')}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Employee Details */}
@@ -92,38 +114,47 @@ export default function Admin() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {userSubmissions.filter(us => us.user.id !== 1).map((userSubmission) => (
-              <div key={userSubmission.user.id} className="border border-gray-200 rounded-lg">
-                <div className="flex items-center justify-between p-3 hover:bg-gray-50">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-xs font-medium text-white">
-                        {userSubmission.user.username.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{userSubmission.user.username}</div>
-                      <div className="text-xs text-gray-500">
-                        Task Plan: {userSubmission.taskCount} tasks
+            {userSubmissions.filter(us => us.user.id !== 1).map((userSubmission) => {
+              const hasTimesheet = usersWithTimesheets.has(userSubmission.user.id);
+              const isSubmitted = !!userSubmission.submission;
+              
+              return (
+                <div 
+                  key={userSubmission.user.id} 
+                  className={`border rounded-lg p-3 ${isSubmitted ? 'bg-green-50 border-green-200' : 'border-gray-200'}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${isSubmitted ? 'bg-green-600' : 'bg-gray-400'}`}>
+                        <span className="text-xs font-medium text-white">
+                          {userSubmission.user.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{userSubmission.user.username}</div>
+                        <div className="text-xs text-gray-500">
+                          {userSubmission.taskCount} tasks planned
+                          {hasTimesheet ? ' • Timesheet submitted' : ' • No timesheet'}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    {userSubmission.submission ? (
-                      <Badge className="bg-green-100 text-green-800 text-xs">
-                        Submitted {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
+                    
+                    {isSubmitted && (
+                      <div className="text-xs text-green-700">
+                        {format(new Date(userSubmission.submission.submittedAt), 'h:mm a')}
                         {userSubmission.isLate && " (Late)"}
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="bg-red-100 text-red-800 text-xs">
-                        Not Submitted
-                      </Badge>
+                      </div>
                     )}
                   </div>
+                  
+                  {userSubmission.taskCount > 0 && (
+                    <div className="ml-11 text-xs text-gray-600">
+                      Task details: {userSubmission.taskCount} tasks scheduled for today
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
