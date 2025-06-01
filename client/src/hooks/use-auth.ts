@@ -62,6 +62,8 @@ export function useAuth() {
   const logout = () => {
     AuthService.logout();
     queryClient.clear();
+    // Force page reload to clear any cached state and go to login
+    window.location.href = '/login';
   };
 
   return {
