@@ -229,7 +229,7 @@ export default function TaskPlanning() {
         onSuccess={handleTaskCreated}
         task={editingTask}
         projects={projects}
-        defaultDate={dragTaskData?.date || selectedDate}
+        defaultDate={dragTaskData?.date || new Date()}
         defaultStartTime={dragTaskData?.startTime}
         defaultEndTime={dragTaskData?.endTime}
       />
