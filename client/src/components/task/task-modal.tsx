@@ -186,6 +186,12 @@ export default function TaskModal({
       date: taskDate.toISOString(),
     };
 
+    console.log('Final task data being sent:', {
+      ...taskData,
+      taskDate: taskDate.toString(),
+      today: today.toString()
+    });
+
 
 
     if (isEditing && task) {
