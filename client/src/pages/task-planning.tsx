@@ -229,6 +229,7 @@ export default function TaskPlanning() {
             setDragTaskData(null);
             setIsTaskModalOpen(true);
           }}
+          isSubmitted={submissionStatus?.submitted}
         />
       ) : (
         <TimeBasedCalendar
@@ -238,6 +239,7 @@ export default function TaskPlanning() {
           onTaskEdit={submissionStatus?.submitted ? () => {} : handleEditTask}
           onTaskDelete={submissionStatus?.submitted ? () => {} : handleDeleteTask}
           onTaskCreate={submissionStatus?.submitted ? () => {} : handleDragTaskCreate}
+          isSubmitted={submissionStatus?.submitted}
         />
       )}
 

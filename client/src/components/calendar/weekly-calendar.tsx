@@ -13,6 +13,7 @@ interface WeeklyCalendarProps {
   onTaskEdit: (task: TaskWithProject) => void;
   onTaskDelete: (taskId: number) => void;
   onTaskCreate: (date: Date) => void;
+  isSubmitted?: boolean;
 }
 
 export default function WeeklyCalendar({
@@ -22,6 +23,7 @@ export default function WeeklyCalendar({
   onTaskEdit,
   onTaskDelete,
   onTaskCreate,
+  isSubmitted = false,
 }: WeeklyCalendarProps) {
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday
   const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 }); // Sunday
@@ -59,7 +61,7 @@ export default function WeeklyCalendar({
   };
 
   const canEditTask = (task: TaskWithProject) => {
-    return !isPastDate(new Date(task.date));
+    return !isPastDate(new Date(task.date)) && !isSubmitted;
   };
 
   return (
