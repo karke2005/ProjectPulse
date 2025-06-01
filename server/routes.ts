@@ -220,10 +220,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tasks", authenticateToken, async (req: any, res) => {
     try {
-      const taskData = insertTaskSchema.parse({
+      // Convert date strings to Date objects before validation
+      const processedBody = {
         ...req.body,
         userId: req.user.id,
-      });
+        date: new Date(req.body.date),
+        startTime: new Date(req.body.startTime),
+        endTime: new Date(req.body.endTime),
+      };
+
+      const taskData = insertTaskSchema.parse(processedBody);
       
       // Check if date is not in the past (except today)
       const taskDate = new Date(taskData.date);
