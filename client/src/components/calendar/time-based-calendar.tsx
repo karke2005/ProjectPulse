@@ -257,15 +257,18 @@ export default function TimeBasedCalendar({
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <div className="h-full w-full">
-                                <Badge
-                                  variant="secondary"
-                                  className="h-full w-full flex items-center justify-center text-xs p-1 cursor-pointer hover:opacity-80 overflow-hidden"
-                                  style={{ backgroundColor: task.project.color }}
+                                <div
+                                  className="h-full w-full flex items-center justify-start text-xs p-2 cursor-pointer hover:opacity-80 overflow-hidden text-white font-medium border-l-4 rounded-sm"
+                                  style={{ 
+                                    backgroundColor: task.project.color,
+                                    borderLeftColor: task.project.color,
+                                    filter: 'brightness(0.9)'
+                                  }}
                                 >
                                   <div className="truncate">
                                     {task.title}
                                   </div>
-                                </Badge>
+                                </div>
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
