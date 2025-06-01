@@ -55,7 +55,7 @@ export default function Admin() {
   });
 
   const { data: userTasks = [] } = useQuery<TaskWithProject[]>({
-    queryKey: ['/api/admin/user-tasks', selectedUserId, { date: selectedDate.toISOString() }],
+    queryKey: [`/api/admin/user-tasks/${selectedUserId}`, { date: selectedDate.toISOString() }],
     enabled: !!selectedUserId,
   });
 
