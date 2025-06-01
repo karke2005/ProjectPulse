@@ -339,7 +339,7 @@ export default function Admin() {
                   
                   {selectedUserId === userSubmission.user.id && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         {/* Task Plan Block */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                           <div className="text-xs font-medium text-blue-900 mb-3">
