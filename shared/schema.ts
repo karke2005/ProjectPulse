@@ -20,6 +20,7 @@ export const projects = pgTable("projects", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   color: text("color").notNull().default("#3b82f6"),
+  invoiceAmount: integer("invoice_amount").default(0), // Amount in cents, not visible to regular users
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

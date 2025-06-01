@@ -1,17 +1,39 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import type { UserSubmissionStatus, TaskWithProject } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { insertProjectSchema } from "@shared/schema";
+import { z } from "zod";
+import { Plus } from "lucide-react";
+import type { UserSubmissionStatus, TaskWithProject, Project } from "@shared/schema";
+
+const projectFormSchema = insertProjectSchema.extend({
+  startDate: z.string(),
+  endDate: z.string(),
+  invoiceAmount: z.string().optional(),
+});
+
+type ProjectFormData = z.infer<typeof projectFormSchema>;
 
 export default function Admin() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [showProjectForm, setShowProjectForm] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Redirect if not admin
   if (user?.role !== 'admin') {
@@ -37,14 +59,63 @@ export default function Admin() {
     enabled: !!selectedUserId,
   });
 
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ['/api/projects'],
+  });
+
   // Calculate stats
   const totalUsers = userSubmissions.length;
   const submittedCount = userSubmissions.filter(us => us.submission).length;
   const lateCount = userSubmissions.filter(us => us.isLate && us.submission).length;
   const missingCount = userSubmissions.filter(us => !us.submission).length;
 
+  const form = useForm<ProjectFormData>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      endDate: format(new Date(), 'yyyy-MM-dd'),
+      color: "#3b82f6",
+      invoiceAmount: "",
+      createdBy: user?.id || 1,
+    },
+  });
+
+  const createProjectMutation = useMutation({
+    mutationFn: async (data: ProjectFormData) => {
+      const payload = {
+        ...data,
+        startDate: new Date(data.startDate).toISOString(),
+        endDate: new Date(data.endDate).toISOString(),
+        invoiceAmount: data.invoiceAmount ? Math.round(parseFloat(data.invoiceAmount) * 100) : 0, // Convert to cents
+      };
+      return apiRequest('POST', '/api/projects', payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      toast({
+        title: "Success",
+        description: "Project created successfully",
+      });
+      setShowProjectForm(false);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create project",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleViewUserTasks = (userId: number) => {
     setSelectedUserId(userId);
+  };
+
+  const onSubmit = (data: ProjectFormData) => {
+    createProjectMutation.mutate(data);
   };
 
   return (

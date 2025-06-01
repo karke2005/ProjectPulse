@@ -112,6 +112,7 @@ export class MemStorage implements IStorage {
       startDate: new Date("2024-01-01"),
       endDate: new Date("2024-03-31"),
       color: "#3b82f6",
+      invoiceAmount: 2500000, // $25,000 in cents
       createdBy: adminUser.id,
       createdAt: new Date(),
     };
@@ -124,6 +125,7 @@ export class MemStorage implements IStorage {
       startDate: new Date("2024-02-01"),
       endDate: new Date("2024-06-30"),
       color: "#10b981",
+      invoiceAmount: 5000000, // $50,000 in cents
       createdBy: adminUser.id,
       createdAt: new Date(),
     };
