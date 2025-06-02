@@ -16,22 +16,26 @@ import Header from "@/components/layout/header";
 
 function AuthenticatedApp() {
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto">
-          <Switch>
-            <Route path="/" component={TaskPlanning} />
-            <Route path="/task-planning" component={TaskPlanning} />
-            <Route path="/timesheet" component={Timesheet} />
-            <Route path="/admin" component={Admin} />
-            <Route path="/profile" component={Profile} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-      </div>
-    </div>
+    <Switch>
+      <Route path="/admin" component={Admin} />
+      <Route>
+        <div className="flex h-screen bg-gray-50">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <main className="flex-1 overflow-y-auto">
+              <Switch>
+                <Route path="/" component={TaskPlanning} />
+                <Route path="/task-planning" component={TaskPlanning} />
+                <Route path="/timesheet" component={Timesheet} />
+                <Route path="/profile" component={Profile} />
+                <Route component={NotFound} />
+              </Switch>
+            </main>
+          </div>
+        </div>
+      </Route>
+    </Switch>
   );
 }
 
