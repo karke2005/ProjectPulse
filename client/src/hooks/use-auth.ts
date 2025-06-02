@@ -16,6 +16,11 @@ export function useAuth() {
     queryFn: () => AuthService.getCurrentUser(),
     enabled: AuthService.isAuthenticated(),
     retry: false,
+    onError: () => {
+      // Clear invalid token on auth error
+      AuthService.removeToken();
+      queryClient.clear();
+    }
   });
 
   const loginMutation = useMutation({
