@@ -39,24 +39,14 @@ function AuthenticatedApp() {
   );
 }
 
+import AdminDemo from "@/pages/admin-demo";
+
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
+  // Demo mode - show admin dashboard with comprehensive reporting
   return (
     <Switch>
-      <Route path="/login">
-        {isAuthenticated ? <AuthenticatedApp /> : <Login />}
-      </Route>
       <Route path="*">
-        {isAuthenticated ? <AuthenticatedApp /> : <Login />}
+        <AdminDemo />
       </Route>
     </Switch>
   );
