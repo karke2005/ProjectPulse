@@ -14,13 +14,8 @@ export function useAuth() {
   } = useQuery({
     queryKey: ['/api/auth/me'],
     queryFn: () => AuthService.getCurrentUser(),
-    enabled: AuthService.isAuthenticated(),
+    enabled: false, // Disable automatic auth check for now
     retry: false,
-    onError: () => {
-      // Clear invalid token on auth error
-      AuthService.removeToken();
-      queryClient.clear();
-    }
   });
 
   const loginMutation = useMutation({

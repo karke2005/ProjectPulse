@@ -40,25 +40,12 @@ function AuthenticatedApp() {
 }
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // Clear invalid tokens on startup
+  // Clear any existing auth token to break the loop
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token');
-    if (token && token.length > 0) {
-      // Check if token looks invalid (you can adjust this logic)
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp < Date.now() / 1000) {
-          localStorage.removeItem('auth_token');
-          window.location.reload();
-        }
-      } catch (e) {
-        localStorage.removeItem('auth_token');
-        window.location.reload();
-      }
-    }
+    localStorage.removeItem('auth_token');
   }
+
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
