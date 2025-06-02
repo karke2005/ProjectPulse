@@ -21,7 +21,10 @@ export default function Admin() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [showProjectsView, setShowProjectsView] = useState(false);
+  const [showWeeklyReport, setShowWeeklyReport] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [reportStartDate, setReportStartDate] = useState(new Date('2025-05-26'));
+  const [reportEndDate, setReportEndDate] = useState(new Date('2025-05-30'));
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -81,6 +84,11 @@ export default function Admin() {
 
   const { data: allUserTasks = [] } = useQuery<TaskWithProject[]>({
     queryKey: ['/api/admin/all-user-tasks', { date: selectedDate.toISOString() }],
+  });
+
+  const { data: weeklyReport } = useQuery({
+    queryKey: ['/api/admin/weekly-report', { startDate: reportStartDate.toISOString(), endDate: reportEndDate.toISOString() }],
+    enabled: showWeeklyReport,
   });
 
   // Calculate stats (excluding admin)
@@ -165,7 +173,19 @@ export default function Admin() {
               <p className="text-gray-600 mt-1">Monitor team task plans and timesheet submissions</p>
             </div>
           <div className="flex space-x-3">
-            <Button onClick={() => setShowProjectsView(!showProjectsView)} variant="outline">
+            <Button 
+              onClick={() => {
+                setShowProjectsView(false);
+                setShowWeeklyReport(!showWeeklyReport);
+              }} 
+              variant={showWeeklyReport ? "default" : "outline"}
+            >
+              Weekly Report
+            </Button>
+            <Button onClick={() => {
+              setShowWeeklyReport(false);
+              setShowProjectsView(!showProjectsView);
+            }} variant={showProjectsView ? "default" : "outline"}>
               {showProjectsView ? 'Team Overview' : 'Projects Timeline'}
             </Button>
             <Button onClick={() => setShowProjectForm(!showProjectForm)}>
@@ -310,7 +330,147 @@ export default function Admin() {
         </Card>
       )}
 
-      {showProjectsView ? (
+      {showWeeklyReport ? (
+        // Weekly Report View
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-base">Weekly Report - Plan vs Actual</CardTitle>
+                <div className="flex space-x-3">
+                  <input
+                    type="date"
+                    value={format(reportStartDate, 'yyyy-MM-dd')}
+                    onChange={(e) => setReportStartDate(new Date(e.target.value))}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm"
+                  />
+                  <span className="text-gray-500 text-sm py-2">to</span>
+                  <input
+                    type="date"
+                    value={format(reportEndDate, 'yyyy-MM-dd')}
+                    onChange={(e) => setReportEndDate(new Date(e.target.value))}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {weeklyReport ? (
+                <div className="space-y-6">
+                  {/* Project Summary */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Project Breakdown</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {weeklyReport.projectTotals?.map((project: any) => (
+                        <div key={project.projectName} className="p-4 border border-gray-200 rounded-lg">
+                          <div className="font-medium text-gray-900">{project.projectName}</div>
+                          <div className="mt-2 space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Planned:</span>
+                              <span className="font-medium">{project.plannedHours}h</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Actual:</span>
+                              <span className="font-medium">{project.actualHours}h</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Variance:</span>
+                              <span className={`font-medium ${project.variance >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {project.variance > 0 ? '+' : ''}{project.variance}h
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Tasks:</span>
+                              <span className="font-medium">{project.totalTasks}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* User Reports */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Individual Performance</h3>
+                    <div className="space-y-4">
+                      {weeklyReport.userReports?.map((userReport: any) => (
+                        <div key={userReport.user.id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                                <span className="text-xs font-medium text-white">
+                                  {userReport.user.username.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="font-medium text-gray-900">{userReport.user.username}</div>
+                                <div className="text-sm text-gray-500">{userReport.user.email}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-gray-900">
+                                {userReport.summary.completionRate}% completion
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {userReport.summary.tasksCompleted}/{userReport.summary.tasksPlanned} tasks
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Summary Stats */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div className="text-center p-3 bg-blue-50 rounded-lg">
+                              <div className="text-lg font-semibold text-blue-900">{userReport.summary.plannedHours}h</div>
+                              <div className="text-xs text-blue-700">Planned</div>
+                            </div>
+                            <div className="text-center p-3 bg-green-50 rounded-lg">
+                              <div className="text-lg font-semibold text-green-900">{userReport.summary.actualHours}h</div>
+                              <div className="text-xs text-green-700">Actual</div>
+                            </div>
+                            <div className="text-center p-3 bg-gray-50 rounded-lg">
+                              <div className={`text-lg font-semibold ${userReport.summary.variance >= 0 ? 'text-red-900' : 'text-green-900'}`}>
+                                {userReport.summary.variance > 0 ? '+' : ''}{userReport.summary.variance}h
+                              </div>
+                              <div className="text-xs text-gray-700">Variance</div>
+                            </div>
+                            <div className="text-center p-3 bg-purple-50 rounded-lg">
+                              <div className="text-lg font-semibold text-purple-900">{userReport.summary.completionRate}%</div>
+                              <div className="text-xs text-purple-700">Complete</div>
+                            </div>
+                          </div>
+
+                          {/* Project Breakdown */}
+                          {Object.keys(userReport.projectBreakdown).length > 0 && (
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 mb-2">Project Breakdown</div>
+                              <div className="space-y-2">
+                                {Object.entries(userReport.projectBreakdown).map(([projectName, data]: [string, any]) => (
+                                  <div key={projectName} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                    <span className="text-sm font-medium text-gray-900">{projectName}</span>
+                                    <div className="flex space-x-4 text-xs text-gray-600">
+                                      <span>Planned: {data.planned.toFixed(1)}h</span>
+                                      <span>Actual: {data.actual.toFixed(1)}h</span>
+                                      <span>Tasks: {data.tasks}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  Click on dates above to generate weekly report
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : showProjectsView ? (
         // Projects Timeline View
         <div className="space-y-6">
           <Card>
