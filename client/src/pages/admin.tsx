@@ -124,14 +124,46 @@ export default function Admin() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
-            <p className="text-gray-600 mt-1">Monitor team task plans and timesheet submissions</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Admin Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welcome, {user?.username}</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/profile'}
+              >
+                Profile
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  localStorage.removeItem('auth_token');
+                  window.location.href = '/login';
+                }}
+              >
+                Logout
+              </Button>
+            </div>
           </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Page Header */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Team Management</h2>
+              <p className="text-gray-600 mt-1">Monitor team task plans and timesheet submissions</p>
+            </div>
           <div className="flex space-x-3">
             <Button onClick={() => setShowProjectsView(!showProjectsView)} variant="outline">
               {showProjectsView ? 'Team Overview' : 'Projects Timeline'}
@@ -569,6 +601,7 @@ export default function Admin() {
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 }
