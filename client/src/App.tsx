@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import TaskPlanning from "@/pages/task-planning";
 import Timesheet from "@/pages/timesheet";
 import Admin from "@/pages/admin";
+import AdminDemo from "@/pages/admin-demo";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
@@ -38,8 +39,6 @@ function AuthenticatedApp() {
     </Switch>
   );
 }
-
-import AdminDemo from "@/pages/admin-demo";
 
 function Router() {
   // Demo mode - show admin dashboard with comprehensive reporting
