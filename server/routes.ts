@@ -437,6 +437,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Weekly report routes
+  app.get("/api/admin/weekly-report", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      // Get all users except admin
+      const users = await storage.getAllUsers();
+      const regularUsers = users.filter(user => user.role !== 'admin');
+
+      // Get all tasks and timesheets for the week
+      const weeklyData = [];
+      
+      for (const user of regularUsers) {
+        const tasks = await storage.getTasksByDateRange(user.id, start, end);
+        const timesheets = [];
+        
+        // Get timesheets for all user tasks in the date range
+        for (const task of tasks) {
+          const timesheet = await storage.getTimesheetByTaskAndDate(task.id, task.date);
+          if (timesheet) {
+            const timesheetWithTask = await storage.getTimesheetWithTask(timesheet.id);
+            if (timesheetWithTask) {
+              timesheets.push(timesheetWithTask);
+            }
+          }
+        }
+
+        // Calculate planned vs actual hours
+        const plannedHours = tasks.reduce((total, task) => {
+          const duration = (new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60);
+          return total + duration;
+        }, 0);
+
+        const actualHours = timesheets.reduce((total, ts) => total + ts.actualHours, 0);
+        
+        // Group by project
+        const projectBreakdown = {};
+        tasks.forEach(task => {
+          const projectName = task.project.name;
+          if (!projectBreakdown[projectName]) {
+            projectBreakdown[projectName] = { planned: 0, actual: 0, tasks: 0 };
+          }
+          
+          const duration = (new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60);
+          projectBreakdown[projectName].planned += duration;
+          projectBreakdown[projectName].tasks += 1;
+          
+          const timesheet = timesheets.find(ts => ts.taskId === task.id);
+          if (timesheet) {
+            projectBreakdown[projectName].actual += timesheet.actualHours;
+          }
+        });
+
+        weeklyData.push({
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          },
+          summary: {
+            plannedHours: Math.round(plannedHours * 10) / 10,
+            actualHours: Math.round(actualHours * 10) / 10,
+            variance: Math.round((actualHours - plannedHours) * 10) / 10,
+            tasksPlanned: tasks.length,
+            tasksCompleted: timesheets.filter(ts => ts.status === 'finished').length,
+            completionRate: tasks.length > 0 ? Math.round((timesheets.filter(ts => ts.status === 'finished').length / tasks.length) * 100) : 0
+          },
+          projectBreakdown
+        });
+      }
+
+      // Calculate overall project totals
+      const projectTotals = {};
+      weeklyData.forEach(userData => {
+        Object.keys(userData.projectBreakdown).forEach(projectName => {
+          if (!projectTotals[projectName]) {
+            projectTotals[projectName] = { planned: 0, actual: 0, tasks: 0 };
+          }
+          projectTotals[projectName].planned += userData.projectBreakdown[projectName].planned;
+          projectTotals[projectName].actual += userData.projectBreakdown[projectName].actual;
+          projectTotals[projectName].tasks += userData.projectBreakdown[projectName].tasks;
+        });
+      });
+
+      res.json({
+        period: {
+          startDate: start,
+          endDate: end
+        },
+        userReports: weeklyData,
+        projectTotals: Object.keys(projectTotals).map(name => ({
+          projectName: name,
+          plannedHours: Math.round(projectTotals[name].planned * 10) / 10,
+          actualHours: Math.round(projectTotals[name].actual * 10) / 10,
+          variance: Math.round((projectTotals[name].actual - projectTotals[name].planned) * 10) / 10,
+          totalTasks: projectTotals[name].tasks
+        }))
+      });
+    } catch (error) {
+      console.error('Error generating weekly report:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Admin routes
   app.get("/api/admin/user-submissions", authenticateToken, requireAdmin, async (req: any, res) => {
     try {
