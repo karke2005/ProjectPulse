@@ -40,11 +40,6 @@ function AuthenticatedApp() {
 }
 
 function Router() {
-  // Clear any existing auth token to break the loop
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token');
-  }
-
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {

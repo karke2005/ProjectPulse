@@ -14,7 +14,7 @@ export function useAuth() {
   } = useQuery({
     queryKey: ['/api/auth/me'],
     queryFn: () => AuthService.getCurrentUser(),
-    enabled: false, // Disable automatic auth check for now
+    enabled: AuthService.isAuthenticated(),
     retry: false,
   });
 
