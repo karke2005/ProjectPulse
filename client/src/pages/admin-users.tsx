@@ -56,6 +56,24 @@ export default function AdminUsers() {
     queryKey: ['/api/users'],
   });
 
+  const resetUsersMutation = useMutation({
+    mutationFn: () => apiRequest('DELETE', '/api/admin/reset-users'),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User data reset successfully (admin preserved)",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const createUserMutation = useMutation({
     mutationFn: (data: RegisterData) => apiRequest('POST', '/api/users', data),
     onSuccess: () => {
@@ -320,6 +338,15 @@ export default function AdminUsers() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>System Users ({users.length})</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => resetUsersMutation.mutate()}
+              disabled={resetUsersMutation.isPending}
+              className="text-red-600 hover:text-red-700"
+            >
+              {resetUsersMutation.isPending ? "Resetting..." : "Reset All Users"}
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
