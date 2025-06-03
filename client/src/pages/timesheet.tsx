@@ -157,45 +157,18 @@ export default function Timesheet() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {/* Compact Summary */}
+      <div className="mb-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <i className="fas fa-calendar-day text-blue-600"></i>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Available: 9 hrs</span> | 
+                <span className="font-medium ml-2">Planned: {totalPlannedHours.toFixed(1)} hrs</span> | 
+                <span className="font-medium ml-2">Actual: {totalLoggedHours.toFixed(1)} hrs</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Tasks</p>
-                <p className="text-2xl font-bold text-gray-900">{tasks.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <i className="fas fa-clock text-green-600"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Planned Hours</p>
-                <p className="text-2xl font-bold text-gray-900">{totalPlannedHours.toFixed(1)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <i className="fas fa-hourglass text-purple-600"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Logged Hours</p>
-                <p className="text-2xl font-bold text-gray-900">{totalLoggedHours.toFixed(1)}</p>
+              <div className="text-sm text-gray-600">
+                Tasks: {tasks.length}
               </div>
             </div>
           </CardContent>
@@ -224,11 +197,11 @@ export default function Timesheet() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Tasks for {format(selectedDate, 'EEEE, MMMM dd, yyyy')}</CardTitle>
-            {pendingTasks.length > 0 && !hasSubmittedTimesheet && (
+            {pendingTasks.length > 0 && !hasSubmittedTimesheet && canSubmitTimesheet && (
               <Button 
                 onClick={handleSubmitTimesheet}
-                disabled={submitTimesheetMutation.isPending || !canSubmitTimesheet}
-                className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitTimesheetMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
               >
                 {submitTimesheetMutation.isPending ? "Submitting..." : "Submit Timesheet"}
               </Button>

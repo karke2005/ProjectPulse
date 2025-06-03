@@ -137,6 +137,13 @@ export default function Admin() {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={() => window.location.href = '/admin/timesheets'}
+              >
+                Timesheet Approvals
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => window.location.href = '/profile'}
               >
                 Profile
