@@ -23,6 +23,10 @@ export default function AdminTimesheets() {
     queryKey: ['/api/admin/timesheets', { date: format(selectedDate, 'yyyy-MM-dd'), status: statusFilter }],
   });
 
+  const { data: users = [] } = useQuery({
+    queryKey: ['/api/users'],
+  });
+
   const approveMutation = useMutation({
     mutationFn: (timesheetId: number) => apiRequest('PUT', `/api/admin/timesheets/${timesheetId}/approve`, {}),
     onSuccess: () => {
@@ -78,6 +82,11 @@ export default function AdminTimesheets() {
     rejectMutation.mutate({ timesheetId: selectedTimesheet.id, reason: rejectionReason });
   };
 
+  const getUserInfo = (userId: number) => {
+    const user = users.find((u: any) => u.id === userId);
+    return user ? { username: user.username, email: user.email } : { username: `User ${userId}`, email: '' };
+  };
+
   const getApprovalStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -91,12 +100,46 @@ export default function AdminTimesheets() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Admin Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/admin'}
+              >
+                ← Back to Admin
+              </Button>
+              <h1 className="text-xl font-semibold text-gray-900">Timesheet Approvals</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/profile'}
+              >
+                Profile
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/admin'}
+              >
+                Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Page Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Timesheet Approvals</h2>
-            <p className="text-gray-600 mt-1">Review and approve employee timesheets</p>
+            <h2 className="text-2xl font-bold text-gray-900">Review Employee Timesheets</h2>
+            <p className="text-gray-600 mt-1">Approve or reject timesheet submissions</p>
           </div>
           <div className="flex items-center space-x-4">
             <select
@@ -216,7 +259,10 @@ export default function AdminTimesheets() {
                     <tr key={timesheet.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          User {timesheet.userId}
+                          {getUserInfo(timesheet.userId).username}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {getUserInfo(timesheet.userId).email}
                         </div>
                         <div className="text-sm text-gray-500">
                           Submitted: {format(new Date(timesheet.createdAt), 'MMM dd, hh:mm a')}
