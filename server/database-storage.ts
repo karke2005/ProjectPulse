@@ -5,7 +5,7 @@ import {
   type TaskWithProject, type TimesheetWithTask, type UserSubmissionStatus
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, ne } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import type { IStorage } from "./storage";
 
@@ -482,5 +482,9 @@ export class DatabaseStorage implements IStorage {
     
     // Clear all tasks
     await db.delete(tasks);
+  }
+
+  async resetUsersExceptAdmin(adminId: number): Promise<void> {
+    await db.delete(users).where(ne(users.id, adminId));
   }
 }

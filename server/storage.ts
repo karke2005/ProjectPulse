@@ -54,6 +54,7 @@ export interface IStorage {
 
   // Data management methods
   clearAllSubmissions(): Promise<void>;
+  resetUsersExceptAdmin(adminId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -505,6 +506,15 @@ export class MemStorage implements IStorage {
     this.currentTaskId = 1;
     this.currentTimesheetId = 1;
     this.currentSubmissionId = 1;
+  }
+
+  async resetUsersExceptAdmin(adminId: number): Promise<void> {
+    // Remove all users except the admin
+    for (const [id, user] of this.users.entries()) {
+      if (id !== adminId) {
+        this.users.delete(id);
+      }
+    }
   }
 }
 

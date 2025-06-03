@@ -683,6 +683,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/admin/reset-users", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      // This will reset all users except the current admin
+      await storage.resetUsersExceptAdmin(req.user.id);
+      res.json({ message: "User data reset successfully (admin preserved)" });
+    } catch (error) {
+      console.error("Error resetting users:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
