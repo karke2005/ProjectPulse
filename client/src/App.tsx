@@ -18,6 +18,7 @@ function AuthenticatedApp() {
   return (
     <Switch>
       <Route path="/admin" component={Admin} />
+      <Route path="/profile" component={Profile} />
       <Route>
         <div className="flex h-screen bg-gray-50">
           <Sidebar />
@@ -28,7 +29,6 @@ function AuthenticatedApp() {
                 <Route path="/" component={TaskPlanning} />
                 <Route path="/task-planning" component={TaskPlanning} />
                 <Route path="/timesheet" component={Timesheet} />
-                <Route path="/profile" component={Profile} />
                 <Route component={NotFound} />
               </Switch>
             </main>
