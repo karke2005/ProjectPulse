@@ -15,9 +15,13 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 
 function AuthenticatedApp() {
+  const { user } = useAuth();
+
   return (
     <Switch>
-      <Route path="/admin" component={Admin} />
+      <Route path="/admin">
+        {user?.role === 'admin' ? <Admin /> : <TaskPlanning />}
+      </Route>
       <Route path="/profile" component={Profile} />
       <Route>
         <div className="flex h-screen bg-gray-50">
