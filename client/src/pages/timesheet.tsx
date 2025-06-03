@@ -61,9 +61,13 @@ export default function Timesheet() {
 
   const moveTaskMutation = useMutation({
     mutationFn: ({ taskId, reason }: { taskId: number; reason: string }) => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) throw new Error('Task not found');
+      
       // Create timesheet entry with "moved_to_tomorrow" status
       return apiRequest('POST', '/api/timesheets', {
         taskId,
+        userId: task.userId,
         date: selectedDate.toISOString(),
         actualHours: actualHours[taskId] || 0,
         status: 'moved_to_tomorrow',
@@ -95,8 +99,18 @@ export default function Timesheet() {
   const handleMarkFinished = (task: TaskWithProject) => {
     const hours = actualHours[task.id] || 0;
     
+    if (hours <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter actual hours worked",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createTimesheetMutation.mutate({
       taskId: task.id,
+      userId: task.userId,
       date: selectedDate.toISOString(),
       actualHours: hours,
       status: 'finished',
