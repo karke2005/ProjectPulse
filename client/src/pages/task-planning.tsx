@@ -23,6 +23,7 @@ export default function TaskPlanning() {
   const weekStart = useMemo(() => startOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
   const weekEnd = useMemo(() => endOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
   const todayString = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []); // Stable date string
+  const yesterdayString = useMemo(() => format(addDays(new Date(), -1), 'yyyy-MM-dd'), []); // Yesterday date string
 
   const { data: tasks = [] } = useQuery<TaskWithProject[]>({
     queryKey: ['/api/tasks', { startDate: weekStart.toISOString(), endDate: weekEnd.toISOString() }],
@@ -38,6 +39,10 @@ export default function TaskPlanning() {
 
   const { data: timesheetStatus } = useQuery({
     queryKey: ['/api/timesheets/status', { date: todayString }],
+  });
+
+  const { data: yesterdayTimesheetStatus } = useQuery({
+    queryKey: ['/api/timesheets/status', { date: yesterdayString }],
   });
 
   const submitPlanMutation = useMutation({
@@ -162,6 +167,12 @@ export default function TaskPlanning() {
           submitted: timesheetStatus?.submitted || false,
           submission: timesheetStatus?.submission ? {
             submittedAt: timesheetStatus.submission.submittedAt.toString()
+          } : null
+        }}
+        yesterdayTimesheetStatus={{
+          submitted: yesterdayTimesheetStatus?.submitted || false,
+          submission: yesterdayTimesheetStatus?.submission ? {
+            submittedAt: yesterdayTimesheetStatus.submission.submittedAt.toString()
           } : null
         }}
       />
