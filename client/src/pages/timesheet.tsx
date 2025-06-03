@@ -202,6 +202,23 @@ export default function Timesheet() {
         </Card>
       </div>
 
+      {/* Time Restriction Notice */}
+      {timeRestrictionMessage && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-amber-100 rounded-lg mr-3">
+                <i className="fas fa-clock text-amber-600"></i>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-amber-800">Submission Restricted</p>
+                <p className="text-sm text-amber-700">{timeRestrictionMessage}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Timesheet Table */}
       <Card>
         <CardHeader>
@@ -210,8 +227,8 @@ export default function Timesheet() {
             {pendingTasks.length > 0 && !hasSubmittedTimesheet && (
               <Button 
                 onClick={handleSubmitTimesheet}
-                disabled={submitTimesheetMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
+                disabled={submitTimesheetMutation.isPending || !canSubmitTimesheet}
+                className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitTimesheetMutation.isPending ? "Submitting..." : "Submit Timesheet"}
               </Button>
