@@ -404,6 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timesheetData = insertTimesheetSchema.parse({
         ...req.body,
         userId: req.user.id,
+        date: new Date(req.body.date),
       });
       
       // Check if task belongs to user
