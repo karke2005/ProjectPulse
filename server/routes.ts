@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { 
-  loginSchema, registerSchema, insertProjectSchema, insertTaskSchema, insertTimesheetSchema,
+  loginSchema, registerSchema, insertUserSchema, insertProjectSchema, insertTaskSchema, insertTimesheetSchema,
   type User, type LoginData, type RegisterData 
 } from "@shared/schema";
 import { z } from "zod";
