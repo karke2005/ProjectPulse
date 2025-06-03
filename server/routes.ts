@@ -560,6 +560,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin timesheet approval routes
+  app.get("/api/admin/timesheets", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const { date, status } = req.query;
+      const timesheets = await storage.getAllTimesheetsForAdmin(date, status);
+      res.json(timesheets);
+    } catch (error) {
+      console.error("Error fetching admin timesheets:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/admin/timesheets/:id/approve", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const timesheetId = parseInt(req.params.id);
+      const timesheet = await storage.approveTimesheet(timesheetId, req.user.id);
+      if (!timesheet) {
+        return res.status(404).json({ message: "Timesheet not found" });
+      }
+      res.json(timesheet);
+    } catch (error) {
+      console.error("Error approving timesheet:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/admin/timesheets/:id/reject", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const timesheetId = parseInt(req.params.id);
+      const { reason } = req.body;
+      const timesheet = await storage.rejectTimesheet(timesheetId, req.user.id, reason);
+      if (!timesheet) {
+        return res.status(404).json({ message: "Timesheet not found" });
+      }
+      res.json(timesheet);
+    } catch (error) {
+      console.error("Error rejecting timesheet:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

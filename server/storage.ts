@@ -46,6 +46,11 @@ export interface IStorage {
   getTaskPlanSubmission(userId: number, date: Date): Promise<TaskPlanSubmission | undefined>;
   createTaskPlanSubmission(submission: InsertTaskPlanSubmission): Promise<TaskPlanSubmission>;
   getUserSubmissionStatuses(date: Date): Promise<UserSubmissionStatus[]>;
+
+  // Admin timesheet approval methods
+  getAllTimesheetsForAdmin(date?: string, approvalStatus?: string): Promise<TimesheetWithTask[]>;
+  approveTimesheet(timesheetId: number, adminId: number): Promise<Timesheet | undefined>;
+  rejectTimesheet(timesheetId: number, adminId: number, reason?: string): Promise<Timesheet | undefined>;
 }
 
 export class MemStorage implements IStorage {

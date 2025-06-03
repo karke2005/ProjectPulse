@@ -45,6 +45,10 @@ export const timesheets = pgTable("timesheets", {
   actualHours: real("actual_hours").notNull(),
   status: text("status").notNull(), // "finished" | "moved_to_tomorrow"
   reason: text("reason"), // Required when status is "moved_to_tomorrow"
+  approvalStatus: text("approval_status").default("pending").notNull(), // "pending" | "approved" | "rejected"
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
