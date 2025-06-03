@@ -19,31 +19,27 @@ function AuthenticatedApp() {
   const { user } = useAuth();
 
   return (
-    <Switch>
-      <Route path="/admin">
-        {user?.role === 'admin' ? <Admin /> : <TaskPlanning />}
-      </Route>
-      <Route path="/admin/timesheets">
-        {user?.role === 'admin' ? <AdminTimesheets /> : <TaskPlanning />}
-      </Route>
-      <Route path="/profile" component={Profile} />
-      <Route>
-        <div className="flex h-screen bg-gray-50">
-          <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto">
-              <Switch>
-                <Route path="/" component={TaskPlanning} />
-                <Route path="/task-planning" component={TaskPlanning} />
-                <Route path="/timesheet" component={Timesheet} />
-                <Route component={NotFound} />
-              </Switch>
-            </main>
-          </div>
-        </div>
-      </Route>
-    </Switch>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto">
+          <Switch>
+            <Route path="/" component={TaskPlanning} />
+            <Route path="/task-planning" component={TaskPlanning} />
+            <Route path="/timesheet" component={Timesheet} />
+            <Route path="/admin">
+              {user?.role === 'admin' ? <Admin /> : <TaskPlanning />}
+            </Route>
+            <Route path="/admin/timesheets">
+              {user?.role === 'admin' ? <AdminTimesheets /> : <TaskPlanning />}
+            </Route>
+            <Route path="/profile" component={Profile} />
+            <Route component={NotFound} />
+          </Switch>
+        </main>
+      </div>
+    </div>
   );
 }
 

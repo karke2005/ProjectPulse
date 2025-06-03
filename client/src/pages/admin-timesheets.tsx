@@ -126,47 +126,7 @@ export default function AdminTimesheets() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Admin Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 mb-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/admin'}
-              >
-                ← Back to Admin
-              </Button>
-              <h1 className="text-xl font-semibold text-gray-900">Timesheet Approvals</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleClearData}
-                disabled={clearDataMutation.isPending}
-              >
-                {clearDataMutation.isPending ? "Clearing..." : "Clear All Data"}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/profile'}
-              >
-                Profile
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/admin'}
-              >
-                Dashboard
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       {/* Page Header */}
       <div className="mb-6">
