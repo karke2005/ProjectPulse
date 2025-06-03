@@ -27,6 +27,26 @@ export default function AdminTimesheets() {
     queryKey: ['/api/users'],
   });
 
+  const clearDataMutation = useMutation({
+    mutationFn: () => apiRequest('DELETE', '/api/admin/clear-all-data', {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/all-timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/user-submissions'] });
+      toast({
+        title: "Success",
+        description: "All data cleared successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const approveMutation = useMutation({
     mutationFn: (timesheetId: number) => apiRequest('PUT', `/api/admin/timesheets/${timesheetId}/approve`, {}),
     onSuccess: () => {
@@ -115,6 +135,14 @@ export default function AdminTimesheets() {
               <h1 className="text-xl font-semibold text-gray-900">Timesheet Approvals</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleClearData}
+                disabled={clearDataMutation.isPending}
+              >
+                {clearDataMutation.isPending ? "Clearing..." : "Clear All Data"}
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm"

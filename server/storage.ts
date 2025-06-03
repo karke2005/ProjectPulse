@@ -51,6 +51,9 @@ export interface IStorage {
   getAllTimesheetsForAdmin(date?: string, approvalStatus?: string): Promise<TimesheetWithTask[]>;
   approveTimesheet(timesheetId: number, adminId: number): Promise<Timesheet | undefined>;
   rejectTimesheet(timesheetId: number, adminId: number, reason?: string): Promise<Timesheet | undefined>;
+
+  // Data management methods
+  clearAllSubmissions(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -486,6 +489,22 @@ export class MemStorage implements IStorage {
     
     this.timesheets.set(timesheetId, updatedTimesheet);
     return updatedTimesheet;
+  }
+
+  async clearAllSubmissions(): Promise<void> {
+    // Clear all timesheets
+    this.timesheets.clear();
+    
+    // Clear all task plan submissions
+    this.taskPlanSubmissions.clear();
+    
+    // Clear all tasks
+    this.tasks.clear();
+    
+    // Reset counters
+    this.currentTaskId = 1;
+    this.currentTimesheetId = 1;
+    this.currentSubmissionId = 1;
   }
 }
 

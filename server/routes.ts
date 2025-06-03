@@ -611,6 +611,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/admin/clear-all-data", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      await storage.clearAllSubmissions();
+      res.json({ message: "All submissions cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing submissions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

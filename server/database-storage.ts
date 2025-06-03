@@ -472,4 +472,15 @@ export class DatabaseStorage implements IStorage {
 
     return updated;
   }
+
+  async clearAllSubmissions(): Promise<void> {
+    // Clear all timesheets
+    await db.delete(timesheets);
+    
+    // Clear all task plan submissions
+    await db.delete(taskPlanSubmissions);
+    
+    // Clear all tasks
+    await db.delete(tasks);
+  }
 }
