@@ -22,7 +22,7 @@ export default function Admin() {
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [showProjectsView, setShowProjectsView] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -144,10 +144,7 @@ export default function Admin() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => {
-                  localStorage.removeItem('auth_token');
-                  window.location.href = '/login';
-                }}
+                onClick={logout}
               >
                 Logout
               </Button>
