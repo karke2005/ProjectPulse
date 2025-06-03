@@ -16,9 +16,9 @@ export default function Timesheet() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Only allow today's date for timesheet
-  const today = new Date();
-  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+  // Date validation for timesheet display
+  const currentDate = new Date();
+  const isCurrentDay = format(selectedDate, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd');
 
   const { data: tasks = [] } = useQuery<TaskWithProject[]>({
     queryKey: ['/api/tasks', { date: selectedDate.toISOString() }],
@@ -28,7 +28,7 @@ export default function Timesheet() {
     queryKey: ['/api/timesheets', { date: selectedDate.toISOString() }],
   });
 
-  const todayString = format(today, 'yyyy-MM-dd');
+  const todayString = format(currentDate, 'yyyy-MM-dd');
   
   const { data: submissionStatus } = useQuery({
     queryKey: ['/api/task-plans/status', { date: todayString }],
@@ -114,6 +114,25 @@ export default function Timesheet() {
 
   const pendingTasks = tasks.filter(task => !getTimesheetForTask(task.id));
   const hasSubmittedTimesheet = timesheetStatus && timesheetStatus.submitted;
+
+  // Check if timesheet submission is allowed
+  const now = new Date();
+  const currentHour = now.getHours();
+  const submissionDate = new Date(selectedDate);
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  submissionDate.setHours(0, 0, 0, 0);
+
+  const isSubmissionToday = submissionDate.getTime() === todayDate.getTime();
+  const isFutureDate = submissionDate.getTime() > todayDate.getTime();
+  const isAfter8PM = currentHour >= 20;
+  
+  const canSubmitTimesheet = !isFutureDate && (!isSubmissionToday || isAfter8PM);
+  const timeRestrictionMessage = isSubmissionToday && !isAfter8PM 
+    ? `Timesheets for today can only be submitted after 8:00 PM (currently ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })})`
+    : isFutureDate 
+    ? "Cannot submit timesheets for future dates"
+    : null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

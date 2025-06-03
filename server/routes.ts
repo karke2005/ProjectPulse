@@ -407,6 +407,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         date: new Date(req.body.date),
       });
       
+      // Check timesheet submission time restrictions
+      const now = new Date();
+      const submissionDate = new Date(timesheetData.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      submissionDate.setHours(0, 0, 0, 0);
+      
+      // If submitting for today, check if it's after 8 PM
+      if (submissionDate.getTime() === today.getTime()) {
+        const currentHour = now.getHours();
+        if (currentHour < 20) { // Before 8 PM
+          return res.status(400).json({ 
+            message: "Timesheets for today can only be submitted after 8:00 PM" 
+          });
+        }
+      }
+      
+      // If submitting for future dates, reject
+      if (submissionDate.getTime() > today.getTime()) {
+        return res.status(400).json({ 
+          message: "Cannot submit timesheets for future dates" 
+        });
+      }
+      
       // Check if task belongs to user
       const task = await storage.getTask(timesheetData.taskId);
       if (!task || task.userId !== req.user.id) {
