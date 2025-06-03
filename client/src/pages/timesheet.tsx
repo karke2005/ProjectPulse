@@ -7,15 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/auth";
-import DeferModal from "@/components/task/defer-modal";
-import { StatusBanner } from "@/components/ui/status-banner";
-import type { TaskWithProject, TimesheetWithTask, TaskPlanSubmission } from "@shared/schema";
+
+import type { TaskWithProject, TimesheetWithTask } from "@shared/schema";
 
 export default function Timesheet() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [actualHours, setActualHours] = useState<Record<number, number>>({});
-  const [isDeferModalOpen, setIsDeferModalOpen] = useState(false);
-  const [deferringTask, setDeferringTask] = useState<TaskWithProject | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -33,61 +30,59 @@ export default function Timesheet() {
 
   const todayString = format(today, 'yyyy-MM-dd');
   
-  const { data: submissionStatus } = useQuery<{ submitted: boolean; submission: TaskPlanSubmission | null }>({
+  const { data: submissionStatus } = useQuery({
     queryKey: ['/api/task-plans/status', { date: todayString }],
   });
 
-  const { data: timesheetStatus } = useQuery({
+  const { data: timesheetStatus } = useQuery<{
+    submitted: boolean;
+    totalTasks: number;
+    completedTasks: number;
+    submission?: { submittedAt: string } | null;
+  }>({
     queryKey: ['/api/timesheets/status', { date: todayString }],
   });
 
-  const createTimesheetMutation = useMutation({
-    mutationFn: (timesheetData: any) => apiRequest('POST', '/api/timesheets', timesheetData),
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Timesheet updated successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/timesheets'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const moveTaskMutation = useMutation({
-    mutationFn: ({ taskId, reason }: { taskId: number; reason: string }) => {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) throw new Error('Task not found');
+  const submitTimesheetMutation = useMutation({
+    mutationFn: async () => {
+      const timesheetEntries = [];
       
-      const taskDate = new Date(task.date);
+      for (const task of tasks) {
+        const hours = actualHours[task.id] || 0;
+        if (hours > 0) {
+          timesheetEntries.push({
+            taskId: task.id,
+            userId: task.userId,
+            date: task.date,
+            actualHours: hours,
+            status: 'finished',
+          });
+        }
+      }
       
-      // Create timesheet entry with "moved_to_tomorrow" status
-      return apiRequest('POST', '/api/timesheets', {
-        taskId,
-        userId: task.userId,
-        date: taskDate.toISOString(),
-        actualHours: actualHours[taskId] || 0,
-        status: 'moved_to_tomorrow',
-        reason,
-      });
+      if (timesheetEntries.length === 0) {
+        throw new Error('Please enter hours for at least one task');
+      }
+      
+      // Submit all timesheet entries
+      const promises = timesheetEntries.map(entry => 
+        apiRequest('POST', '/api/timesheets', entry)
+      );
+      
+      return Promise.all(promises);
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Task moved to tomorrow",
+        description: "Timesheet submitted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/timesheets'] });
-      setIsDeferModalOpen(false);
-      setDeferringTask(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/timesheets/status'] });
+      setActualHours({});
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Error", 
         description: error.message,
         variant: "destructive",
       });
@@ -98,41 +93,8 @@ export default function Timesheet() {
     setActualHours(prev => ({ ...prev, [taskId]: hours }));
   };
 
-  const handleMarkFinished = (task: TaskWithProject) => {
-    const hours = actualHours[task.id] || 0;
-    
-    if (hours <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter actual hours worked",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const taskDate = new Date(task.date);
-    
-    createTimesheetMutation.mutate({
-      taskId: task.id,
-      userId: task.userId,
-      date: taskDate.toISOString(),
-      actualHours: hours,
-      status: 'finished',
-    });
-  };
-
-  const handleMoveToTomorrow = (task: TaskWithProject) => {
-    setDeferringTask(task);
-    setIsDeferModalOpen(true);
-  };
-
-  const handleDeferTask = (reason: string) => {
-    if (deferringTask) {
-      moveTaskMutation.mutate({
-        taskId: deferringTask.id,
-        reason,
-      });
-    }
+  const handleSubmitTimesheet = () => {
+    submitTimesheetMutation.mutate();
   };
 
   // Get timesheet data for each task
@@ -140,61 +102,38 @@ export default function Timesheet() {
     return timesheets.find(ts => ts.task.id === taskId);
   };
 
-  // Calculate total hours
-  const totalLoggedHours = timesheets.reduce((sum, ts) => sum + ts.actualHours, 0);
-  const totalPlannedHours = tasks.reduce((sum, task) => {
-    const start = new Date(task.startTime);
-    const end = new Date(task.endTime);
-    return sum + ((end.getTime() - start.getTime()) / (1000 * 60 * 60));
+  // Calculate totals
+  const totalPlannedHours = tasks.reduce((acc, task) => {
+    const plannedHours = ((new Date(task.endTime).getTime() - new Date(task.startTime).getTime()) / (1000 * 60 * 60));
+    return acc + plannedHours;
   }, 0);
 
-  if (!isToday) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Card>
-          <CardContent className="p-8 text-center">
-            <i className="fas fa-clock text-gray-300 text-4xl mb-4"></i>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Timesheet Access Restricted</h3>
-            <p className="text-gray-600">Timesheet entries can only be made for today's tasks.</p>
-            <Button
-              onClick={() => setSelectedDate(today)}
-              className="mt-4"
-            >
-              Go to Today
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const totalLoggedHours = timesheets.reduce((acc, timesheet) => {
+    return acc + timesheet.actualHours;
+  }, 0);
+
+  const pendingTasks = tasks.filter(task => !getTimesheetForTask(task.id));
+  const hasSubmittedTimesheet = timesheetStatus && timesheetStatus.submitted;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Status Banner */}
-      <StatusBanner 
-        taskPlanStatus={{
-          submitted: submissionStatus?.submitted || false,
-          submission: submissionStatus?.submission ? {
-            submittedAt: submissionStatus.submission.submittedAt.toString()
-          } : null
-        }}
-        timesheetStatus={{
-          submitted: timesheetStatus?.submitted || false,
-          submission: timesheetStatus?.submission ? {
-            submittedAt: timesheetStatus.submission.submittedAt.toString()
-          } : null
-        }}
-      />
-      
       {/* Page Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Daily Timesheet</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Timesheet</h2>
             <p className="text-gray-600 mt-1">Log your actual work hours and task completion</p>
           </div>
-          <div className="text-sm text-gray-600">
-            Total Logged: <span className="font-semibold text-gray-900">{totalLoggedHours.toFixed(1)} hours</span>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              Total Logged: <span className="font-semibold text-gray-900">{totalLoggedHours.toFixed(1)} hours</span>
+            </div>
+            <input
+              type="date"
+              value={format(selectedDate, 'yyyy-MM-dd')}
+              onChange={(e) => setSelectedDate(new Date(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+            />
           </div>
         </div>
       </div>
@@ -247,19 +186,30 @@ export default function Timesheet() {
       {/* Timesheet Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Tasks for {format(selectedDate, 'EEEE, MMMM dd, yyyy')}</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Tasks for {format(selectedDate, 'EEEE, MMMM dd, yyyy')}</CardTitle>
+            {pendingTasks.length > 0 && !hasSubmittedTimesheet && (
+              <Button 
+                onClick={handleSubmitTimesheet}
+                disabled={submitTimesheetMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {submitTimesheetMutation.isPending ? "Submitting..." : "Submit Timesheet"}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         
         <CardContent>
           {tasks.length === 0 ? (
             <div className="text-center py-8">
-              <i className="fas fa-calendar-times text-gray-300 text-4xl mb-4"></i>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Tasks for Today</h3>
-              <p className="text-gray-600">You haven't planned any tasks for today.</p>
+              <i className="fas fa-calendar-day text-gray-300 text-4xl mb-4"></i>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks scheduled</h3>
+              <p className="text-gray-600">You don't have any tasks scheduled for this date.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -269,16 +219,13 @@ export default function Timesheet() {
                       Project
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Planned
+                      Planned Hours
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actual Hours
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -330,40 +277,6 @@ export default function Timesheet() {
                             <Badge variant="outline">Pending</Badge>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {!timesheet ? (
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleMarkFinished(task);
-                                }}
-                                disabled={createTimesheetMutation.isPending || moveTaskMutation.isPending}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <i className="fas fa-check-circle mr-1"></i>
-                                Finish
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleMoveToTomorrow(task);
-                                }}
-                                disabled={createTimesheetMutation.isPending || moveTaskMutation.isPending}
-                              >
-                                <i className="fas fa-arrow-right mr-1"></i>
-                                Move
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">Completed</span>
-                          )}
-                        </td>
                       </tr>
                     );
                   })}
@@ -374,17 +287,24 @@ export default function Timesheet() {
         </CardContent>
       </Card>
 
-      {/* Defer Task Modal */}
-      <DeferModal
-        isOpen={isDeferModalOpen}
-        onClose={() => {
-          setIsDeferModalOpen(false);
-          setDeferringTask(null);
-        }}
-        onDefer={handleDeferTask}
-        task={deferringTask}
-        isPending={moveTaskMutation.isPending}
-      />
+      {/* Help Text */}
+      {tasks.length > 0 && !hasSubmittedTimesheet && (
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <i className="fas fa-info-circle text-blue-600"></i>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">How to submit your timesheet</h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>1. Enter the actual hours worked for each task</p>
+                <p>2. Click "Submit Timesheet" to log your time</p>
+                <p>3. You can only submit once per day</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
