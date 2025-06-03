@@ -55,6 +55,7 @@ export interface IStorage {
   // Data management methods
   clearAllSubmissions(): Promise<void>;
   resetUsersExceptAdmin(adminId: number): Promise<void>;
+  deleteUser(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -515,6 +516,10 @@ export class MemStorage implements IStorage {
         this.users.delete(id);
       }
     }
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
   }
 }
 
