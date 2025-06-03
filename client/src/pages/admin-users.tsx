@@ -132,6 +132,23 @@ export default function AdminUsers() {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: (userId: number) => apiRequest('POST', `/api/admin/reset-password/${userId}`),
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: `Admin password reset to: ${data.newPassword}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: RegisterData) => {
     if (editingUser) {
       updateUserMutation.mutate({

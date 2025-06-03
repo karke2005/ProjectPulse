@@ -203,6 +203,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/reset-password/:userId", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user.role !== 'admin') {
+        return res.status(400).json({ message: "Password reset is only available for admin users" });
+      }
+      
+      // Generate a new temporary password
+      const newPassword = `admin${Math.floor(Math.random() * 10000)}`;
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      await storage.updateUser(userId, { password: hashedPassword });
+      
+      res.json({ 
+        message: "Admin password reset successfully",
+        newPassword: newPassword
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.delete("/api/admin/reset-users", authenticateToken, requireAdmin, async (req: any, res) => {
     try {
       await storage.resetUsersExceptAdmin(req.user.id);
