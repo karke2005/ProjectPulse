@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit2, Users, ArrowLeft, Trash2 } from "lucide-react";
+import { Plus, Edit2, Users, ArrowLeft, Trash2, Key } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -411,6 +411,18 @@ export default function AdminUsers() {
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
+                  {userItem.role === 'admin' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => resetPasswordMutation.mutate(userItem.id)}
+                      disabled={resetPasswordMutation.isPending}
+                      className="text-orange-600 hover:text-orange-700"
+                      title="Reset Admin Password"
+                    >
+                      <Key className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"

@@ -36,7 +36,7 @@ export default function Sidebar() {
           
           {/* Navigation */}
           <nav className="mt-8 flex-1 px-2 space-y-1">
-            {navigation.map((item) => (
+            {user?.role !== 'admin' && navigation.map((item) => (
               <Link key={item.name} href={item.href}>
                 <div
                   className={`${
