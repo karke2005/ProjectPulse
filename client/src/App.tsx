@@ -10,6 +10,7 @@ import TaskPlanning from "@/pages/task-planning";
 import Timesheet from "@/pages/timesheet";
 import Admin from "@/pages/admin";
 import AdminTimesheets from "@/pages/admin-timesheets";
+import AdminUsers from "@/pages/admin-users";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
@@ -33,6 +34,9 @@ function AuthenticatedApp() {
             </Route>
             <Route path="/admin/timesheets">
               {user?.role === 'admin' ? <AdminTimesheets /> : <TaskPlanning />}
+            </Route>
+            <Route path="/admin/users">
+              {user?.role === 'admin' ? <AdminUsers /> : <TaskPlanning />}
             </Route>
             <Route path="/profile" component={Profile} />
             <Route component={NotFound} />

@@ -611,6 +611,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/users", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const userData = registerSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      
+      const existingUsername = await storage.getUserByUsername(userData.username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      
+      // Create user
+      const user = await storage.createUser({
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role || 'employee',
+        notificationEmail: userData.notificationEmail || null,
+        timesheetReminderTime: userData.timesheetReminderTime || null,
+      });
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/users/:id", authenticateToken, requireAdmin, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // Prevent admin from demoting themselves
+      if (userId === req.user.id && updateData.role && updateData.role !== 'admin') {
+        return res.status(400).json({ message: "Cannot change your own admin role" });
+      }
+      
+      const user = await storage.updateUser(userId, updateData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.delete("/api/admin/clear-all-data", authenticateToken, requireAdmin, async (req: any, res) => {
     try {
       await storage.clearAllSubmissions();
