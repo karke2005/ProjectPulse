@@ -487,4 +487,9 @@ export class DatabaseStorage implements IStorage {
   async resetUsersExceptAdmin(adminId: number): Promise<void> {
     await db.delete(users).where(ne(users.id, adminId));
   }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
 }

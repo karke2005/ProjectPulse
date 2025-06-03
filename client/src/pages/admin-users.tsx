@@ -114,6 +114,24 @@ export default function AdminUsers() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: number) => apiRequest('DELETE', `/api/users/${userId}`),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: RegisterData) => {
     if (editingUser) {
       updateUserMutation.mutate({
@@ -392,6 +410,15 @@ export default function AdminUsers() {
                     disabled={userItem.id === user?.id && userItem.role === 'admin'}
                   >
                     <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => deleteUserMutation.mutate(userItem.id)}
+                    disabled={userItem.id === user?.id || deleteUserMutation.isPending}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
