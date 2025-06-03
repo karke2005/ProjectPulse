@@ -107,6 +107,12 @@ export default function AdminTimesheets() {
     return user ? { username: user.username, email: user.email } : { username: `User ${userId}`, email: '' };
   };
 
+  const handleClearData = () => {
+    if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+      clearDataMutation.mutate();
+    }
+  };
+
   const getApprovalStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
