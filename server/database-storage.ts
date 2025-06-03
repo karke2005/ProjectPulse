@@ -376,4 +376,100 @@ export class DatabaseStorage implements IStorage {
 
     return statuses;
   }
+
+  async getAllTimesheetsForAdmin(date?: string, approvalStatus?: string): Promise<TimesheetWithTask[]> {
+    let query = db
+      .select({
+        id: timesheets.id,
+        taskId: timesheets.taskId,
+        userId: timesheets.userId,
+        date: timesheets.date,
+        actualHours: timesheets.actualHours,
+        status: timesheets.status,
+        reason: timesheets.reason,
+        approvalStatus: timesheets.approvalStatus,
+        approvedBy: timesheets.approvedBy,
+        approvedAt: timesheets.approvedAt,
+        rejectionReason: timesheets.rejectionReason,
+        createdAt: timesheets.createdAt,
+        task: {
+          id: tasks.id,
+          title: tasks.title,
+          description: tasks.description,
+          projectId: tasks.projectId,
+          userId: tasks.userId,
+          startTime: tasks.startTime,
+          endTime: tasks.endTime,
+          date: tasks.date,
+          createdAt: tasks.createdAt,
+          project: {
+            id: projects.id,
+            name: projects.name,
+            description: projects.description,
+            color: projects.color,
+            createdAt: projects.createdAt
+          }
+        }
+      })
+      .from(timesheets)
+      .innerJoin(tasks, eq(timesheets.taskId, tasks.id))
+      .innerJoin(projects, eq(tasks.projectId, projects.id));
+
+    if (date) {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      query = query.where(
+        and(
+          gte(timesheets.date, startOfDay),
+          lte(timesheets.date, endOfDay)
+        )
+      );
+    }
+
+    if (approvalStatus) {
+      query = query.where(eq(timesheets.approvalStatus, approvalStatus));
+    }
+
+    const results = await query;
+    return results.map(result => ({
+      ...result,
+      task: {
+        ...result.task,
+        project: result.task.project
+      }
+    }));
+  }
+
+  async approveTimesheet(timesheetId: number, adminId: number): Promise<Timesheet | undefined> {
+    const [updated] = await db
+      .update(timesheets)
+      .set({
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date()
+      })
+      .where(eq(timesheets.id, timesheetId))
+      .returning();
+
+    return updated;
+  }
+
+  async rejectTimesheet(timesheetId: number, adminId: number, reason?: string): Promise<Timesheet | undefined> {
+    const [updated] = await db
+      .update(timesheets)
+      .set({
+        approvalStatus: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        rejectionReason: reason
+      })
+      .where(eq(timesheets.id, timesheetId))
+      .returning();
+
+    return updated;
+  }
 }

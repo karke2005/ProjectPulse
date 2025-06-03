@@ -427,6 +427,66 @@ export class MemStorage implements IStorage {
     const dateStr = date.toISOString().split('T')[0];
     return `${userId}-${dateStr}`;
   }
+
+  async getAllTimesheetsForAdmin(date?: string, approvalStatus?: string): Promise<TimesheetWithTask[]> {
+    const allTimesheets: TimesheetWithTask[] = [];
+    
+    for (const timesheet of this.timesheets.values()) {
+      if (date) {
+        const timesheetDate = new Date(timesheet.date).toISOString().split('T')[0];
+        if (timesheetDate !== date) continue;
+      }
+      
+      if (approvalStatus && timesheet.approvalStatus !== approvalStatus) continue;
+      
+      const task = this.tasks.get(timesheet.taskId);
+      if (task) {
+        const project = this.projects.get(task.projectId);
+        if (project) {
+          allTimesheets.push({
+            ...timesheet,
+            task: {
+              ...task,
+              project
+            }
+          });
+        }
+      }
+    }
+    
+    return allTimesheets;
+  }
+
+  async approveTimesheet(timesheetId: number, adminId: number): Promise<Timesheet | undefined> {
+    const timesheet = this.timesheets.get(timesheetId);
+    if (!timesheet) return undefined;
+    
+    const updatedTimesheet = {
+      ...timesheet,
+      approvalStatus: 'approved' as const,
+      approvedBy: adminId,
+      approvedAt: new Date()
+    };
+    
+    this.timesheets.set(timesheetId, updatedTimesheet);
+    return updatedTimesheet;
+  }
+
+  async rejectTimesheet(timesheetId: number, adminId: number, reason?: string): Promise<Timesheet | undefined> {
+    const timesheet = this.timesheets.get(timesheetId);
+    if (!timesheet) return undefined;
+    
+    const updatedTimesheet = {
+      ...timesheet,
+      approvalStatus: 'rejected' as const,
+      approvedBy: adminId,
+      approvedAt: new Date(),
+      rejectionReason: reason || null
+    };
+    
+    this.timesheets.set(timesheetId, updatedTimesheet);
+    return updatedTimesheet;
+  }
 }
 
 import { DatabaseStorage } from "./database-storage";
