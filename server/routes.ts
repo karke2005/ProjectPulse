@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { 
   loginSchema, registerSchema, insertProjectSchema, insertTaskSchema, insertTimesheetSchema,
@@ -626,11 +627,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username already taken" });
       }
       
+      // Hash password before creating user
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
       // Create user
       const user = await storage.createUser({
         username: userData.username,
         email: userData.email,
-        password: userData.password,
+        password: hashedPassword,
         role: userData.role || 'employee',
         notificationEmail: userData.notificationEmail || null,
         timesheetReminderTime: userData.timesheetReminderTime || null,
