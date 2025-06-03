@@ -9,7 +9,6 @@ import Dashboard from "@/pages/dashboard";
 import TaskPlanning from "@/pages/task-planning";
 import Timesheet from "@/pages/timesheet";
 import Admin from "@/pages/admin";
-import AdminDemo from "@/pages/admin-demo";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
@@ -41,11 +40,23 @@ function AuthenticatedApp() {
 }
 
 function Router() {
-  // Demo mode - show admin dashboard with comprehensive reporting
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
+      <Route path="/login">
+        {isAuthenticated ? <AuthenticatedApp /> : <Login />}
+      </Route>
       <Route path="*">
-        <AdminDemo />
+        {isAuthenticated ? <AuthenticatedApp /> : <Login />}
       </Route>
     </Switch>
   );
