@@ -64,11 +64,13 @@ export default function Timesheet() {
       const task = tasks.find(t => t.id === taskId);
       if (!task) throw new Error('Task not found');
       
+      const taskDate = new Date(task.date);
+      
       // Create timesheet entry with "moved_to_tomorrow" status
       return apiRequest('POST', '/api/timesheets', {
         taskId,
         userId: task.userId,
-        date: selectedDate.toISOString(),
+        date: taskDate.toISOString(),
         actualHours: actualHours[taskId] || 0,
         status: 'moved_to_tomorrow',
         reason,
@@ -108,10 +110,12 @@ export default function Timesheet() {
       return;
     }
     
+    const taskDate = new Date(task.date);
+    
     createTimesheetMutation.mutate({
       taskId: task.id,
       userId: task.userId,
-      date: selectedDate.toISOString(),
+      date: taskDate.toISOString(),
       actualHours: hours,
       status: 'finished',
     });
@@ -331,8 +335,12 @@ export default function Timesheet() {
                             <div className="flex space-x-2">
                               <Button
                                 size="sm"
-                                onClick={() => handleMarkFinished(task)}
-                                disabled={createTimesheetMutation.isPending}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleMarkFinished(task);
+                                }}
+                                disabled={createTimesheetMutation.isPending || moveTaskMutation.isPending}
                                 className="bg-green-600 hover:bg-green-700"
                               >
                                 <i className="fas fa-check-circle mr-1"></i>
@@ -341,8 +349,12 @@ export default function Timesheet() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleMoveToTomorrow(task)}
-                                disabled={createTimesheetMutation.isPending}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleMoveToTomorrow(task);
+                                }}
+                                disabled={createTimesheetMutation.isPending || moveTaskMutation.isPending}
                               >
                                 <i className="fas fa-arrow-right mr-1"></i>
                                 Move
