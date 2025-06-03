@@ -265,7 +265,7 @@ export default function AdminUsers() {
                       <FormItem>
                         <FormLabel>Notification Email (Optional)</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input type="email" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -279,7 +279,7 @@ export default function AdminUsers() {
                       <FormItem>
                         <FormLabel>Timesheet Reminder Time (Optional)</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <Input type="time" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
